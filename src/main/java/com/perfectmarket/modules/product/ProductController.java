@@ -1,15 +1,23 @@
 package com.perfectmarket.modules.product;
 
+import com.perfectmarket.modules.product.dto.request.CreateProductRequest;
+import com.perfectmarket.modules.product.dto.response.CreateProductResponse;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/products")
+@RequiredArgsConstructor
 public class ProductController {
+    private final ProductService productService;
 
     // TODO: Create Product (Designer only)
     @PostMapping
-    public String createProduct() {
-        return "TODO: Implement Product Creation";
+    public ResponseEntity<CreateProductResponse.ProductResponse> createProduct(@RequestAttribute UUID userId, @RequestBody CreateProductRequest createProductRequest) {
+        return ResponseEntity.ok(productService.createProduct(userId, createProductRequest));
     }
 
     // TODO: List Products with Filters (Designer, Category, Sort by price/sold)

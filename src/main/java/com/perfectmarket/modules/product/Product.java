@@ -4,6 +4,8 @@ import com.perfectmarket.modules.auth.User;
 import jakarta.persistence.*;
 import lombok.*;
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -29,6 +31,18 @@ public class Product {
     private double ratingAvg;
 
     // TODO: Add category mapping
-    // TODO: Add product images list
-    // TODO: Add created_at, updated_at
+
+    @OneToMany(mappedBy = "product")
+    private List<ProductImage> images;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
+
+    @PrePersist
+    protected void onCreate() {
+        viewCount = 0;
+        soldCount = 0;
+        ratingAvg = 0;
+        createdAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now();
+    }
 }
