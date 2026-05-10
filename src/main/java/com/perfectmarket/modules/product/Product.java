@@ -31,9 +31,17 @@ public class Product {
     private double ratingAvg;
 
     // TODO: Add category mapping
+    @ManyToMany
+    @JoinTable(
+            name = "products_categories",
+            joinColumns = @JoinColumn(name = "product_id"),
+            inverseJoinColumns = @JoinColumn(name = "category_id")
+    )
+    private List<Category> categories;
 
-    @OneToMany(mappedBy = "product")
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL)
     private List<ProductImage> images;
+    private boolean isActive;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
@@ -42,6 +50,7 @@ public class Product {
         viewCount = 0;
         soldCount = 0;
         ratingAvg = 0;
+        isActive = true;
         createdAt = LocalDateTime.now();
         updatedAt = LocalDateTime.now();
     }

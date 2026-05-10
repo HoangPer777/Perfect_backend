@@ -21,6 +21,8 @@ public class User {
     @Column(unique = true)
     private String username;
 
+    private String avatarUrl;
+
     private String status; // ACTIVE, INACTIVE, BANNED
     private boolean isVerified;
 
