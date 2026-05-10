@@ -5,6 +5,7 @@ import com.perfectmarket.modules.auth.UserRepository;
 import com.perfectmarket.modules.product.dto.request.CreateProductRequest;
 import com.perfectmarket.modules.product.dto.response.CardProductResponse;
 import com.perfectmarket.modules.product.dto.response.CreateProductResponse;
+import com.perfectmarket.modules.product.dto.response.DesignerProjection;
 import com.perfectmarket.modules.product.dto.response.ProductDetailResponse;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -90,7 +91,7 @@ public class ProductService {
     }
 
     @Transactional(readOnly = true)
-    public List<CardProductResponse> getNewestProducts(Integer limit) {
+    public List<CardProductResponse> getLatestProducts(Integer limit) {
         int safeLimit = validateLimit(limit);
         Pageable pageable = PageRequest.of(0, safeLimit);
 
@@ -112,14 +113,11 @@ public class ProductService {
     }
 
     @Transactional(readOnly = true)
-    public List<CardProductResponse> getHottestProducts(Integer limit) {
+    public List<DesignerProjection> getHottestDesigners(Integer limit) {
         int safeLimit = validateLimit(limit);
         Pageable pageable = PageRequest.of(0, safeLimit);
 
-        return productRepository.findByIsActiveTrueAndStatusOrderBySoldCountDesc("PUBLISHED", pageable)
-                .stream()
-                .map(this::mapToCardResponse)
-                .toList();
+        return productRepository.getHottestDesigner("PUBLISHED", pageable);
     }
 
     private int validateLimit(Integer limit) {

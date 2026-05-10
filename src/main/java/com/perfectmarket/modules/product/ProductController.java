@@ -3,6 +3,7 @@ package com.perfectmarket.modules.product;
 import com.perfectmarket.modules.product.dto.request.CreateProductRequest;
 import com.perfectmarket.modules.product.dto.response.CardProductResponse;
 import com.perfectmarket.modules.product.dto.response.CreateProductResponse;
+import com.perfectmarket.modules.product.dto.response.DesignerProjection;
 import com.perfectmarket.modules.product.dto.response.ProductDetailResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -31,8 +32,8 @@ public class ProductController {
     }
 
     @GetMapping("/hottest")
-    public ResponseEntity<List<CardProductResponse>> getHottestProducts(@RequestParam(required = false, defaultValue = "10") Integer limit) {
-        return ResponseEntity.ok(productService.getHottestProducts(limit));
+    public ResponseEntity<List<DesignerProjection>> getHottestDesigners(@RequestParam(required = false, defaultValue = "10") Integer limit) {
+        return ResponseEntity.ok(productService.getHottestDesigners(limit));
     }
 
     @GetMapping("/view")
@@ -41,8 +42,8 @@ public class ProductController {
     }
 
     @GetMapping("/newest")
-    public ResponseEntity<List<CardProductResponse>> getNewestProducts(@RequestParam(required = false, defaultValue = "10") Integer limit) {
-        return ResponseEntity.ok(productService.getNewestProducts(limit));
+    public ResponseEntity<List<CardProductResponse>> getLatestProducts(@RequestParam(required = false, defaultValue = "10") Integer limit) {
+        return ResponseEntity.ok(productService.getLatestProducts(limit));
     }
 
     // TODO: Get Product detail

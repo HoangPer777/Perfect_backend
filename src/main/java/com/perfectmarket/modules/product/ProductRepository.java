@@ -1,5 +1,6 @@
 package com.perfectmarket.modules.product;
 
+import com.perfectmarket.modules.product.dto.response.DesignerProjection;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -26,6 +27,13 @@ public interface ProductRepository extends JpaRepository<Product, UUID> {
     @EntityGraph(attributePaths = {"designer"})
     List<Product> findByIsActiveTrueAndStatusOrderByViewCountDesc(String status, Pageable pageable);
 
-    @EntityGraph(attributePaths = {"designer"})
-    List<Product> findByIsActiveTrueAndStatusOrderBySoldCountDesc(String status, Pageable pageable);
+    @Query("""
+    SELECT u.id as id, u.username as username, u.avatarUrl as avatarUrl, SUM(p.soldCount) as totalSold
+    FROM Product p 
+    JOIN p.designer u 
+    WHERE p.isActive = true AND p.status = :status
+    GROUP BY u.id, u.username, u.avatarUrl
+    ORDER BY SUM(p.soldCount) DESC
+    """)
+    List<DesignerProjection> getHottestDesigner(String status, Pageable pageable);
 }
