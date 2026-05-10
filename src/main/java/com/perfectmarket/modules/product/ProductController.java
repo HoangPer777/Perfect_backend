@@ -20,7 +20,7 @@ public class ProductController {
 
     // TODO: Create Product (Designer only)
     // FIXME: Get userId and check role from Spring Security (after complete login)
-    @PostMapping
+    @PostMapping("/add")
     public ResponseEntity<CreateProductResponse> createProduct(@RequestAttribute UUID userId, @RequestBody CreateProductRequest createProductRequest) {
         return ResponseEntity.ok(productService.createProduct(userId, createProductRequest));
     }
