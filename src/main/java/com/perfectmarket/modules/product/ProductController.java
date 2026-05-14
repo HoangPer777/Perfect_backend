@@ -1,10 +1,7 @@
 package com.perfectmarket.modules.product;
 
 import com.perfectmarket.modules.product.dto.request.CreateProductRequest;
-import com.perfectmarket.modules.product.dto.response.CardProductResponse;
-import com.perfectmarket.modules.product.dto.response.CreateProductResponse;
-import com.perfectmarket.modules.product.dto.response.DesignerProjection;
-import com.perfectmarket.modules.product.dto.response.ProductDetailResponse;
+import com.perfectmarket.modules.product.dto.response.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -21,8 +18,8 @@ public class ProductController {
     // TODO: Create Product (Designer only)
     // FIXME: Get userId and check role from Spring Security (after complete login)
     @PostMapping("/add")
-    public ResponseEntity<CreateProductResponse> createProduct(@RequestAttribute UUID userId, @RequestBody CreateProductRequest createProductRequest) {
-        return ResponseEntity.ok(productService.createProduct(userId, createProductRequest));
+    public ResponseEntity<CreateProductResponse> createProduct(@RequestBody CreateProductRequest createProductRequest) {
+        return ResponseEntity.ok(productService.createProduct(createProductRequest));
     }
 
     // TODO: List Products with Filters (Designer, Category, Sort by price/sold)
@@ -52,5 +49,9 @@ public class ProductController {
         return ResponseEntity.ok(productService.getProductById(id));
     }
 
+    @GetMapping("/leaf-categories")
+    public ResponseEntity<List<CategoryResponse>> getAllLeafCategories() {
+        return ResponseEntity.ok(productService.findAllLeafCategories());
+    }
     // TODO: Like/Comment on Product
 }

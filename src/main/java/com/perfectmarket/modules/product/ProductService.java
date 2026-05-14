@@ -3,10 +3,7 @@ package com.perfectmarket.modules.product;
 import com.perfectmarket.modules.auth.User;
 import com.perfectmarket.modules.auth.UserRepository;
 import com.perfectmarket.modules.product.dto.request.CreateProductRequest;
-import com.perfectmarket.modules.product.dto.response.CardProductResponse;
-import com.perfectmarket.modules.product.dto.response.CreateProductResponse;
-import com.perfectmarket.modules.product.dto.response.DesignerProjection;
-import com.perfectmarket.modules.product.dto.response.ProductDetailResponse;
+import com.perfectmarket.modules.product.dto.response.*;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -27,18 +24,18 @@ public class ProductService {
     private final CategoryRepository categoryRepository;
 
     @Transactional
-    public CreateProductResponse createProduct(UUID userId, CreateProductRequest request) {
-        User user = userRepository.getReferenceById(userId);
+    public CreateProductResponse createProduct(CreateProductRequest request) {
+        //User user = userRepository.getReferenceById(userId);
         List<Category> categories = request.categories().stream()
                 .map(categoryRepository::getReferenceById)
                 .toList();
 
         Product product = Product.builder()
-                .designer(user)
+                //.designer(user)
                 .categories(categories)
                 .title(request.title())
                 .description(request.description())
-                .price(request.price())
+                //.price(request.price())
                 .thumbnailUrl(request.thumbnailUrl())
                 .status(request.status())
                 .build();
@@ -136,5 +133,9 @@ public class ProductService {
                 p.getDesigner().getAvatarUrl(),
                 p.getDesigner().getUsername()
         );
+    }
+
+    public List<CategoryResponse> findAllLeafCategories() {
+        return categoryRepository.findAllLeafCategories().stream().map(c -> new CategoryResponse(c.getId(), c.getName(), c.getIcon(), c.getSlug())).toList();
     }
 }
