@@ -14,9 +14,9 @@ public class CloudinaryConfig {
     @Bean
     public Cloudinary getCloudinary(CloudinaryProperties props) {
         return new Cloudinary(ObjectUtils.asMap(
-                "cloud_name", props.getName(),
+                "cloud_name", props.getCloudName(),
                 "api_key", props.getApiKey(),
-                "api_secret", props.getSecret())
+                "api_secret", props.getApiSecret())
         );
     }
 
@@ -25,8 +25,8 @@ public class CloudinaryConfig {
     @Setter
     @ConfigurationProperties(prefix = "cloudinary")
     public static class CloudinaryProperties {
-        private String name;
+        private String cloudName;
         private String apiKey;
-        private String secret;
+        private String apiSecret;
     }
 }

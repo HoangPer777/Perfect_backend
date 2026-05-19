@@ -1,6 +1,5 @@
 package com.perfectmarket.modules.product;
 
-import com.perfectmarket.modules.auth.User;
 import com.perfectmarket.modules.auth.UserRepository;
 import com.perfectmarket.modules.product.dto.request.CreateProductRequest;
 import com.perfectmarket.modules.product.dto.response.*;
@@ -123,6 +122,14 @@ public class ProductService {
     }
 
     private CardProductResponse mapToCardResponse(Product p) {
+        String avatarUrl = null;
+        String username = null;
+
+        if(p.getDesigner() != null) {
+            avatarUrl = p.getDesigner().getAvatarUrl();
+            username = p.getDesigner().getUsername();
+        }
+
         return new CardProductResponse(
                 p.getId(),
                 p.getTitle(),
@@ -130,8 +137,8 @@ public class ProductService {
                 p.getThumbnailUrl(),
                 p.getRatingAvg(),
                 p.getSoldCount(),
-                p.getDesigner().getAvatarUrl(),
-                p.getDesigner().getUsername()
+                avatarUrl,
+                username
         );
     }
 
