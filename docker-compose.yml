@@ -4,31 +4,41 @@ services:
     ports:
       - "8080:8080"
     environment:
+      # QUAN TRỌNG: Host phải là tên service 'db'
       - DB_URL=jdbc:postgresql://db:5432/perfect_market
-      - DB_USERNAME=postgres
-      - DB_PASSWORD=postgres
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_PASSWORD=${DB_PASSWORD}
       - REDIS_HOST=redis
     depends_on:
       db:
         condition: service_healthy
       redis:
         condition: service_started
+    networks:
+      - perfect-network
 
   db:
     image: postgres:16-alpine
-    environment:
-      - POSTGRES_DB=perfect_market
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
     ports:
       - "5432:5432"
+    environment:
+      - POSTGRES_DB=perfect_market
+      - POSTGRES_USER=${DB_USERNAME}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d perfect_market"]
-      interval: 10s
+      # Kiểm tra database đã thực sự sẵn sàng nhận query chưa
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME} -d perfect_market"]
+      interval: 5s
       timeout: 5s
       retries: 5
+    networks:
+      - perfect-network
 
   redis:
     image: redis:7-alpine
-    ports:
-      - "6379:6379"
+    networks:
+      - perfect-network
+
+networks:
+  perfect-network:
+    driver: bridge
