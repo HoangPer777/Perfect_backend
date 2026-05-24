@@ -42,16 +42,33 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
             return;
         }
         String name  = oauthUser.getAttribute("name");
-        String picture = oauthUser.getAttribute("picture");
+        String picture = null;
+        if ("GOOGLE".equals(provider)) {
+            picture = oauthUser.getAttribute("picture");
+        } else if ("FACEBOOK".equals(provider)) {
+            Object pictureObj = oauthUser.getAttribute("picture");
+            if (pictureObj instanceof java.util.Map) {
+                java.util.Map<?, ?> pictureMap = (java.util.Map<?, ?>) pictureObj;
+                Object dataObj = pictureMap.get("data");
+                if (dataObj instanceof java.util.Map) {
+                    java.util.Map<?, ?> dataMap = (java.util.Map<?, ?>) dataObj;
+                    Object urlObj = dataMap.get("url");
+                    if (urlObj != null) {
+                        picture = urlObj.toString();
+                    }
+                }
+            }
+        }
         String providerId = oauthUser.getName();
 
+        final String finalPicture = picture;
         User user = userRepository.findByEmail(email).orElseGet(() -> {
             Role customerRole = roleRepository.findByName("ROLE_CUSTOMER")
                 .orElseThrow(() -> new RuntimeException("Role not found"));
             return userRepository.save(User.builder()
                 .email(email)
                 .fullName(name)
-                .avatarUrl(picture)
+                .avatarUrl(finalPicture)
                 .provider(provider)
                 .providerId(providerId)
                 .isVerified(true)
