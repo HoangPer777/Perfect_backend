@@ -37,19 +37,21 @@ public class AuthService {
         }
 
         String roleName = req.role().equalsIgnoreCase("DESIGNER")
-            ? "ROLE_DESIGNER" : "ROLE_CUSTOMER";
+                ? "ROLE_DESIGNER" : "ROLE_CUSTOMER";
 
         Role role = roleRepository.findByName(roleName)
-            .orElseThrow(() -> new RuntimeException("Role not found: " + roleName));
+                .orElseThrow(() -> new RuntimeException("Role not found: " + roleName));
 
         User user = User.builder()
-            .email(req.email())
-            .fullName(req.fullName())
-            .passwordHash(passwordEncoder.encode(req.password()))
-            .provider("LOCAL")
-            .isVerified(false)
-            .roles(Set.of(role))
-            .build();
+                .email(req.email())
+                .fullName(req.fullName())
+                .username(req.email())
+                .passwordHash(passwordEncoder.encode(req.password()))
+                .provider("LOCAL")
+                .isVerified(false)
+                .status("ACTIVE")
+                .roles(Set.of(role))
+                .build();
 
         userRepository.save(user);
         String token = jwtUtil.generateToken(user.getEmail());
@@ -60,7 +62,7 @@ public class AuthService {
 
     public AuthResponse login(LoginRequest req) {
         User user = userRepository.findByEmail(req.email())
-            .orElseThrow(() -> new IllegalArgumentException("Invalid email or password"));
+                .orElseThrow(() -> new IllegalArgumentException("Invalid email or password"));
 
         if (!"LOCAL".equals(user.getProvider())) {
             String provider = user.getProvider();
@@ -90,10 +92,10 @@ public class AuthService {
 
             String token = UUID.randomUUID().toString();
             PasswordResetToken prt = PasswordResetToken.builder()
-                .user(user)
-                .token(token)
-                .expiresAt(Instant.now().plus(resetExpiryMinutes, ChronoUnit.MINUTES))
-                .build();
+                    .user(user)
+                    .token(token)
+                    .expiresAt(Instant.now().plus(resetExpiryMinutes, ChronoUnit.MINUTES))
+                    .build();
             resetTokenRepository.save(prt);
             emailService.sendPasswordResetEmail(email, token);
         });
@@ -105,7 +107,7 @@ public class AuthService {
     @Transactional
     public void resetPassword(ResetPasswordRequest req) {
         PasswordResetToken prt = resetTokenRepository.findByToken(req.token())
-            .orElseThrow(() -> new IllegalArgumentException("Invalid or expired token"));
+                .orElseThrow(() -> new IllegalArgumentException("Invalid or expired token"));
 
         if (prt.isUsed() || prt.isExpired()) {
             throw new IllegalArgumentException("Token has expired or already been used");
@@ -123,13 +125,13 @@ public class AuthService {
 
     public AuthResponse.UserInfo me(String email) {
         User user = userRepository.findByEmail(email)
-            .orElseThrow(() -> new IllegalArgumentException("User not found"));
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
         var roles = user.getRoles().stream()
-            .map(r -> r.getName())
-            .collect(java.util.stream.Collectors.toSet());
+                .map(r -> r.getName())
+                .collect(java.util.stream.Collectors.toSet());
         return new AuthResponse.UserInfo(
-            user.getId(), user.getEmail(), user.getFullName(),
-            user.getUsername(), user.getAvatarUrl(), roles
+                user.getId(), user.getEmail(), user.getFullName(),
+                user.getUsername(), user.getAvatarUrl(), roles
         );
     }
 }

@@ -2,6 +2,7 @@ package com.perfectmarket.modules.auth;
 
 import java.util.UUID;
 import java.util.Collection;
+import java.util.Objects;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import lombok.Builder;
@@ -10,6 +11,7 @@ import lombok.Builder;
 public record UserPrincipal(
         UUID id,
         String email,
+        String username,
         String password,
         String status,
         boolean isVerified,
@@ -17,7 +19,11 @@ public record UserPrincipal(
 ) implements UserDetails {
 
     @Override
-    public String getUsername() { return email; }
+    public String getUsername() {
+        // This is the method Spring Security calls to get the "principal name".
+        // It must not be null.
+        return Objects.requireNonNullElse(username, email);
+    }
 
     @Override
     public String getPassword() { return password; }
@@ -37,6 +43,7 @@ public record UserPrincipal(
 
     @Override
     public boolean isAccountNonExpired() { return true; }
+
     @Override
     public boolean isCredentialsNonExpired() { return true; }
 }

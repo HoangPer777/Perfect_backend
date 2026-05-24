@@ -36,15 +36,23 @@ public class JwtUtil {
         return parseClaims(token).getSubject();
     }
 
-    public boolean isValid(String token) {
-        try {
-            parseClaims(token);
-            return true;
-        } catch (JwtException | IllegalArgumentException e) {
-            return false;
-        }
+//    public boolean isValid(String token) {
+//        try {
+//            parseClaims(token);
+//            return true;
+//        } catch (JwtException | IllegalArgumentException e) {
+//            return false;
+//        }
+//    }
+public boolean isValid(String token) {
+    try {
+        parseClaims(token);
+        return true;
+    } catch (JwtException | IllegalArgumentException e) {
+        System.out.println("DEBUG: Lỗi Token: " + e.getMessage());
+        return false;
     }
-
+}
     private Claims parseClaims(String token) {
         return Jwts.parser()
             .verifyWith(key)

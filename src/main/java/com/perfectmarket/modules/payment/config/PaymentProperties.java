@@ -3,20 +3,20 @@ import lombok.Getter;
 import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
-
-@Configuration
+@Component
 @ConfigurationProperties(prefix = "payment")
 @Getter
 @Setter
 public class PaymentProperties {
 
-    private ExchangeRate exchangeRate;
-    private MomoConfig momo;
-    private VnPayConfig vnpay;
-    private ZaloPayConfig zalopay;
-    private PayPalConfig paypal;
+    private ExchangeRate exchangeRate = new ExchangeRate();
+    private MomoConfig momo = new MomoConfig();
+    private VnPayConfig vnpay = new VnPayConfig();
+    private ZaloPayConfig zalopay = new ZaloPayConfig();
+    private PayPalConfig paypal = new PayPalConfig();
 
     @Getter @Setter
     public static class ExchangeRate {

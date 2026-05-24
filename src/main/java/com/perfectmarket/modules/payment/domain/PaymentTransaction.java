@@ -25,7 +25,7 @@ import java.util.UUID;
 public class PaymentTransaction {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID) // Đổi từ IDENTITY sang UUID
+    @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
     @ManyToOne(fetch = FetchType.LAZY)

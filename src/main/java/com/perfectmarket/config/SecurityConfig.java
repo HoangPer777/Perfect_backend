@@ -1,5 +1,6 @@
 package com.perfectmarket.config;
 
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -31,21 +32,23 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-            .cors(c -> c.configurationSource(corsSource()))
-            .csrf(csrf -> csrf.disable())
-            .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            .authorizeHttpRequests(auth -> auth
-                .requestMatchers(
-                    "/api/v1/auth/**",
-                    "/login/oauth2/**",
-                    "/oauth2/**"
-                ).permitAll()
-                .anyRequest().authenticated()
-            )
-            .oauth2Login(oauth -> oauth
-                .successHandler(oAuth2SuccessHandler)
-            )
-            .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+                .cors(c -> c.configurationSource(corsSource()))
+                .csrf(csrf -> csrf.disable())
+                .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+
+                .exceptionHandling(ex -> ex
+                        .authenticationEntryPoint((req, res, authException) -> {
+                            res.setContentType("application/json");
+                            res.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                            res.getWriter().write("{\"error\": \"Unauthorized: Vui lòng kiểm tra lại Token\"}");
+                        })
+                )
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/api/v1/auth/**", "/login/oauth2/**", "/oauth2/**").permitAll()
+                        .anyRequest().authenticated()
+                )
+                .oauth2Login(oauth -> oauth.successHandler(oAuth2SuccessHandler))
+                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }

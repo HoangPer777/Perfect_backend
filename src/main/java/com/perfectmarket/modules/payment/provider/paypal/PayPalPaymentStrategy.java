@@ -12,6 +12,7 @@ import com.perfectmarket.modules.payment.provider.dto.PayPalOrderResponse;
 import com.perfectmarket.modules.payment.provider.dto.PayPalTokenResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.http.*;
 import org.springframework.stereotype.Component;
 import org.springframework.util.LinkedMultiValueMap;
@@ -24,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 @Component
+@Configuration
 @RequiredArgsConstructor
 @Slf4j
 public class PayPalPaymentStrategy implements PaymentGatewayStrategy {
@@ -40,7 +42,6 @@ public class PayPalPaymentStrategy implements PaymentGatewayStrategy {
     public String createPaymentUrl(PaymentSession session) {
         BigDecimal rate = paymentProperties.getExchangeRate().getVndToUsd();
         BigDecimal usdAmount = session.getTotalAmount().getAmount().divide(rate, 2, RoundingMode.HALF_UP);
-
         String accessToken = getAccessToken();
         var conf = paymentProperties.getPaypal();
 

@@ -36,8 +36,19 @@ public class PaymentApplicationService {
                 new Money(BigDecimal.valueOf(amount), "VND"),
                 UUID.randomUUID().toString()
         );
+        try {
+            log.info("Đang kiểm tra tính hợp lệ của session trước khi lưu...");
+            sessionRepository.saveAndFlush(session);
+        } catch (Exception e) {
+            log.error("LỖI KHÔNG TƯỞNG: ", e); // Dòng này sẽ in ra stack trace đầy đủ nhất
+            throw e;
+        }
 
         session.startProcessing();
+        log.info("DEBUG: Kiểm tra giá trị trước khi save:");
+        log.info(" - Session orderId: {}", session.getOrderId());
+        log.info(" - Session Amount: {}", session.getTotalAmount()); // Kiểm tra xem Money có bị null không
+        log.info(" - Session IdempotencyKey: {}", session.getIdempotencyKey());
         sessionRepository.save(session);
 
         PaymentGatewayStrategy strategy = gatewayFactory.get(provider);

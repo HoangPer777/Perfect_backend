@@ -12,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -44,7 +45,8 @@ public class PaymentController {
     public ResponseEntity<Map<String, String>> initializePayment(@RequestBody @Valid PaymentInitRequest request) {
         UUID userId = currentUserProvider.getCurrentUserId();
         log.info("Khởi tạo thanh toán cho User: {} - Order: {}", userId, request.orderId());
-
+        var auth = SecurityContextHolder.getContext().getAuthentication();
+        System.out.println("DEBUG: Auth trong Controller: " + (auth != null ? auth.getPrincipal() : "NULL"));
         String paymentUrl = paymentService.initializePayment(
                 userId,
                 request.orderId(),
