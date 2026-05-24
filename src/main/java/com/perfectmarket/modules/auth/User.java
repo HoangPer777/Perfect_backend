@@ -2,6 +2,11 @@ package com.perfectmarket.modules.auth;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+
+import java.time.Instant;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
@@ -9,6 +14,7 @@ import java.util.UUID;
 @Table(name = "users")
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
 public class User {
+
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
@@ -17,14 +23,33 @@ public class User {
     private String email;
 
     private String passwordHash;
-    
+
+    private String fullName;
+
     @Column(unique = true)
     private String username;
 
     private String avatarUrl;
 
+<<<<<<< HEAD
     private String status; // ACTIVE, INACTIVE, BANNED
     private boolean isVerified;
+=======
+    @Column(nullable = false)
+    @Builder.Default
+    private String status = "ACTIVE"; // ACTIVE | INACTIVE | BANNED
+
+    @Column(nullable = false)
+    @Builder.Default
+    private boolean isVerified = false;
+
+    /** LOCAL | GOOGLE | FACEBOOK */
+    @Column(nullable = false)
+    @Builder.Default
+    private String provider = "LOCAL";
+
+    private String providerId;
+>>>>>>> origin/auth
 
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
@@ -32,8 +57,12 @@ public class User {
         joinColumns = @JoinColumn(name = "user_id"),
         inverseJoinColumns = @JoinColumn(name = "role_id")
     )
-    private Set<Role> roles;
+    @Builder.Default
+    private Set<Role> roles = new HashSet<>();
 
-    // TODO: Add social login provider info
-    // TODO: Add created_at, updated_at (Auditing)
+    @CreationTimestamp
+    private Instant createdAt;
+
+    @UpdateTimestamp
+    private Instant updatedAt;
 }

@@ -1,4 +1,9 @@
+# Target directories
 target/
+build/
+bin/
+
+# Maven/IDE Wrappers
 !.mvn/wrapper/maven-wrapper.jar
 !**/src/main/resources/archetype-resources/**
 !**/src/test/resources/archetype-resources/**
@@ -13,7 +18,7 @@ target/
 .sts4-cache
 
 ### IntelliJ IDEA ###
-.idea
+.idea/
 *.iws
 *.iml
 *.ipr
@@ -24,7 +29,6 @@ target/
 /dist/
 /nbdist/
 /.nb-gradle/
-build/
 !extracting_jar_id.txt
 
 ### VS Code ###
@@ -33,6 +37,14 @@ build/
 ### Operating System Files ###
 *.DS_Store
 Thumbs.db
-.env
-.idea/
 *.log
+
+### Environment Files ###
+# Loại bỏ tất cả các file .env để tránh lộ mật khẩu
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.env
+.env.*

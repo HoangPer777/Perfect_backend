@@ -18,7 +18,7 @@ spring:
   # JPA & Hibernate
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: update # Giữ update để tự tạo bảng cho bạn
     show-sql: true
     properties:
       hibernate:
@@ -27,8 +27,18 @@ spring:
         jdbc.batch_size: 20
         order_inserts: true
         order_updates: true
-        # Tăng cường hiệu năng khi dùng UUID
         hibernate.id.new_generator_mappings: true
+
+  # Mail Configuration
+  mail:
+    host: ${MAIL_HOST:smtp.gmail.com}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:noreply@perfectmarket.com}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail.smtp.auth: true
+      mail.smtp.starttls.enable: true
+    test-connection: false
 
   # Redis
   data:
@@ -53,11 +63,16 @@ spring:
 
 # JWT Configuration
 jwt:
-  secret: ${JWT_SECRET}
+  secret: ${JWT_SECRET:very-long-secret-key-at-least-32-chars-long-for-hs256-algorithm}
   expiration: 86400000
   refresh-expiration: 604800000
 
-# Placeholder cho Storage & Cloud (Sẵn sàng để bạn điền vào .env)
+# App Specific Config
+app:
+  frontend-url: ${FRONTEND_URL:http://localhost:3000}
+  reset-password-expiry-minutes: 30
+
+# Storage Config
 storage:
   cloudinary:
     cloud-name: ${CLOUDINARY_CLOUD_NAME}
@@ -77,6 +92,8 @@ logging:
     org.springframework.security: INFO
     org.hibernate.SQL: DEBUG
     org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+
+# Payment Configuration
 payment:
   exchange-rate:
-    vnd-to-usd: 25000  # Đảm bảo khớp với tên field trong class
+    vnd-to-usd: 25000
