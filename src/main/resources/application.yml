@@ -1,65 +1,123 @@
 spring:
   application:
     name: perfect-market
-  
+
+  # DataSource & HikariCP
   datasource:
-    url: ${DB_URL:jdbc:postgresql://localhost:5432/perfect_market}
+    url: ${DB_URL:jdbc:postgresql://db:5432/perfect_market}
     username: ${DB_USERNAME:postgres}
     password: ${DB_PASSWORD:postgres}
     driver-class-name: org.postgresql.Driver
+    hikari:
+      pool-name: PerfectMarketHikariPool
+      maximum-pool-size: 10
+      minimum-idle: 5
+      idle-timeout: 300000
+      connection-timeout: 20000
 
+  # JPA & Hibernate
   jpa:
     hibernate:
-      ddl-auto: validate
+      ddl-auto: update
     show-sql: true
     properties:
       hibernate:
         format_sql: true
         dialect: org.hibernate.dialect.PostgreSQLDialect
+        jdbc.batch_size: 20
+        order_inserts: true
+        order_updates: true
+        hibernate.id.new_generator_mappings: true
+        # Tắt kiểm tra validation của JPA/Hibernate
+        javax.persistence.validation.mode: none
+        # Tắt thêm các validator nội bộ của Hibernate nếu cần
+        hibernate.validator.apply_to_ddl: false
 
+  # Mail Configuration
+  mail:
+    host: ${MAIL_HOST:smtp.gmail.com}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:noreply@perfectmarket.com}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail.smtp.auth: true
+      mail.smtp.starttls.enable: true
+    test-connection: false
+
+  # Redis
   data:
     redis:
       host: ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:6379}
+      timeout: 2000
 
+  # OAuth2
   security:
     oauth2:
       client:
         registration:
           google:
-            client-id: ${GOOGLE_CLIENT_ID:your-client-id}
-            client-secret: ${GOOGLE_CLIENT_SECRET:your-client-secret}
+            client-id: ${GOOGLE_CLIENT_ID}
+            client-secret: ${GOOGLE_CLIENT_SECRET}
             scope: profile, email
           facebook:
-            client-id: ${FACEBOOK_CLIENT_ID:your-client-id}
-            client-secret: ${FACEBOOK_CLIENT_SECRET:your-client-secret}
+            client-id: ${FACEBOOK_CLIENT_ID}
+            client-secret: ${FACEBOOK_CLIENT_SECRET}
             scope: public_profile, email
 
-# TODO: Add Cloudinary Configuration
-# cloudinary:
-#   cloud-name: ${CLOUDINARY_CLOUD_NAME}
-#   api-key: ${CLOUDINARY_API_KEY}
-#   api-secret: ${CLOUDINARY_API_SECRET}
-
-# TODO: Add AWS S3 Configuration
-# aws:
-#   s3:
-#     bucket: ${S3_BUCKET}
-#     region: ${S3_REGION}
-#     access-key: ${S3_ACCESS_KEY}
-#     secret-key: ${S3_SECRET_KEY}
-
-# TODO: Add Stripe Configuration
-# stripe:
-#   api-key: ${STRIPE_API_KEY}
-#   webhook-secret: ${STRIPE_WEBHOOK_SECRET}
-
+# JWT Configuration
 jwt:
-  secret: ${JWT_SECRET:very-long-secret-key-at-least-32-chars-long}
-  expiration: 86400000 # 24h
-  refresh-expiration: 604800000 # 7 days
+  secret: ${JWT_SECRET:very-long-secret-key-at-least-32-chars-long-for-hs256-algorithm}
+  expiration: 86400000
+  refresh-expiration: 604800000
 
+# App Specific Config
+app:
+  frontend-url: ${FRONTEND_URL:http://localhost:3000}
+  reset-password-expiry-minutes: 30
+
+# Storage Config
+storage:
+  cloudinary:
+    cloud-name: ${CLOUDINARY_CLOUD_NAME}
+    api-key: ${CLOUDINARY_API_KEY}
+    api-secret: ${CLOUDINARY_API_SECRET}
+  aws:
+    s3:
+      bucket: ${S3_BUCKET}
+      region: ${S3_REGION}
+      access-key: ${S3_ACCESS_KEY}
+      secret-key: ${S3_SECRET_KEY}
+
+# Logging Configuration
 logging:
   level:
     com.perfectmarket: DEBUG
     org.springframework.security: INFO
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+
+# Payment Configuration
+payment:
+  exchange-rate:
+    vnd-to-usd: ${VND_TO_USD_RATE:25000}
+  paypal:
+    client-id: ${PAYPAL_CLIENT_ID}
+    client-secret: ${PAYPAL_CLIENT_SECRET}
+    mode: ${PAYPAL_MODE}
+    base-url: ${PAYPAL_BASE_URL}
+    return-url: ${PAYPAL_RETURN_URL}
+    cancel-url: ${PAYPAL_CANCEL_URL}
+  vnpay:
+    tmn-code: ${VNPAY_TMN_CODE}
+    hash-secret: ${VNPAY_HASH_SECRET}
+    url: ${VNPAY_URL}
+    ipn-url: ${VNPAY_IPN_URL}
+    return-url: ${VNPAY_RETURN_URL}
+  momo:
+    partner-code: ${MOMO_PARTNER_CODE}
+    access-key: ${MOMO_ACCESS_KEY}
+    secret-key: ${MOMO_SECRET_KEY}
+    endpoint: ${MOMO_ENDPOINT}
+    callback-url: ${MOMO_CALLBACK_URL}
+    return-url: ${MOMO_RETURN_URL}

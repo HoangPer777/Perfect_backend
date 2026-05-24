@@ -1,0 +1,105 @@
+[33mcommit 59820899fa2ec84415cf3d57991d19678600ab4b[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mfeature/payment-cleanup[m[33m, [m[1;31morigin/feature/payment-cleanup[m[33m)[m
+Author: (Lê Vũ Hùng) <levuhung678@gmail.com>
+Date:   Sun May 24 17:02:23 2026 +0700
+
+    chore: accept user entity structure from auth branch
+
+[33mcommit 58bb2c52866ab6ceede4af8f3b2f43cb1ad3b9e1[m
+Author: (Lê Vũ Hùng) <levuhung678@gmail.com>
+Date:   Sun May 24 16:41:34 2026 +0700
+
+    fix: resolve conflicts in User entity by merging auth provider and status fields
+
+[33mcommit 669ff4fd293cafb7418235732fb859ae4cbc3313[m
+Author: (Lê Vũ Hùng) <levuhung678@gmail.com>
+Date:   Sun May 24 16:33:44 2026 +0700
+
+    fix: remove duplicate SecurityConfig and keep JWT/OAuth2 version
+
+[33mcommit 91dcdfaa293598323ba4653b1725e5592668ee77[m
+Merge: 4c973cc e49b487
+Author: (Lê Vũ Hùng) <levuhung678@gmail.com>
+Date:   Sun May 24 16:31:30 2026 +0700
+
+    fix: merge auth module and integrate payment configurations
+
+[33mcommit 4c973cc849933f5bf97841950e7d06f195950070[m[33m ([m[1;32mmain[m[33m)[m
+Author: (Lê Vũ Hùng) <levuhung678@gmail.com>
+Date:   Sun May 24 16:23:48 2026 +0700
+
+    feat: complete payment module, docker and db migration
+
+[33mcommit 89cf8e91f624ab935c4e0db978c15dff8e53328e[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m
+Merge: ab3f720 46e8a21
+Author: Thu Tran <124800719+Tran-3110@users.noreply.github.com>
+Date:   Wed May 20 00:22:01 2026 +0700
+
+    Merge pull request #3 from HoangPer777/upload-product
+    
+    Config CROS in Spring boot
+
+[33mcommit 46e8a213fbb0359faf57a4c211734c4fc8c16214[m[33m ([m[1;31morigin/upload-product[m[33m)[m
+Author: Tran-3110 <22130276@st.hcmuaf.edu.vn>
+Date:   Wed May 20 00:19:27 2026 +0700
+
+    Config CROS in Spring boot
+
+[33mcommit ab3f720368f076ae5447f230feeab2c1b5b72e1b[m
+Merge: 6295820 e2ae1a3
+Author: Thu Tran <124800719+Tran-3110@users.noreply.github.com>
+Date:   Thu May 14 22:27:54 2026 +0700
+
+    Merge pull request #2 from HoangPer777/upload-product
+    
+    Update and Fixed Add Product API
+
+[33mcommit e2ae1a362794b348091c10f26b7040e9fad755ba[m
+Author: Tran-3110 <22130276@st.hcmuaf.edu.vn>
+Date:   Thu May 14 18:50:57 2026 +0700
+
+    Fix add product api
+
+[33mcommit 6295820d708319d8a6f7a08af6e2cd5f03961813[m
+Merge: f5e0873 a0f8f6d
+Author: Thu Tran <124800719+Tran-3110@users.noreply.github.com>
+Date:   Mon May 11 08:05:40 2026 +0700
+
+    Merge pull request #1 from HoangPer777/upload-product
+    
+    Add product API
+
+[33mcommit a0f8f6d5dba67068064bc3940a2bc809c6386e24[m
+Author: Tran-3110 <22130276@st.hcmuaf.edu.vn>
+Date:   Mon May 11 02:03:04 2026 +0700
+
+    fix sth
+
+[33mcommit e03d1ec05a25733a631e7ac251aa92a8f1f8da29[m
+Author: Tran-3110 <22130276@st.hcmuaf.edu.vn>
+Date:   Mon May 11 01:57:24 2026 +0700
+
+    Add get hottest designer api
+
+[33mcommit 6633c2e21db8a9b16e3316ca98c79d1715928aeb[m
+Author: Tran-3110 <22130276@st.hcmuaf.edu.vn>
+Date:   Mon May 11 01:30:13 2026 +0700
+
+    Add get list products (view, hot and new)
+
+[33mcommit 059d9f383c086f789ea30a2d02ea90648ca264fa[m
+Author: Tran-3110 <22130276@st.hcmuaf.edu.vn>
+Date:   Fri May 8 21:22:46 2026 +0700
+
+    Add create product api
+
+[33mcommit e49b4875136f0634a465f6a42b4f003e795c2fe2[m[33m ([m[1;31morigin/auth[m[33m)[m
+Author: HoangPer777 <phanhoang03505@gmail.com>
+Date:   Mon Apr 27 00:06:01 2026 +0700
+
+    backend login, register, logout, forgot password
+
+[33mcommit f5e0873b7f81ea877c478c2eda7dbefbdb04c7db[m
+Author: HoangPer777 <phanhoang03505@gmail.com>
+Date:   Sat Apr 18 17:51:51 2026 +0700
+
+    feat: initial project structure for backend
