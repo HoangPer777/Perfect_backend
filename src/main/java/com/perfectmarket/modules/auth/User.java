@@ -31,7 +31,7 @@ public class User {
 
     private String avatarUrl;
 
-    // --- CẤU HÌNH GỘP TỪ 2 NHÁNH ---
+    // --- Cấu trúc đầy đủ của Hoàng ---
     @Column(nullable = false)
     @Builder.Default
     private String status = "ACTIVE"; // ACTIVE | INACTIVE | BANNED
@@ -46,13 +46,13 @@ public class User {
     private String provider = "LOCAL";
 
     private String providerId;
-    // --------------------------------
+    // ---------------------------------
 
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "user_roles",
-            joinColumns = @JoinColumn(name = "role_id"), // Kiểm tra lại DB nếu cần
-            inverseJoinColumns = @JoinColumn(name = "user_id")
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "role_id")
     )
     @Builder.Default
     private Set<Role> roles = new HashSet<>();
