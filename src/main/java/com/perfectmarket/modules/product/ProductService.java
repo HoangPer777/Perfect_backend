@@ -1,5 +1,6 @@
 package com.perfectmarket.modules.product;
 
+import com.perfectmarket.modules.auth.User;
 import com.perfectmarket.modules.auth.UserRepository;
 import com.perfectmarket.modules.product.dto.request.CreateProductRequest;
 import com.perfectmarket.modules.product.dto.response.*;
@@ -23,14 +24,14 @@ public class ProductService {
     private final CategoryRepository categoryRepository;
 
     @Transactional
-    public CreateProductResponse createProduct(CreateProductRequest request) {
-        //User user = userRepository.getReferenceById(userId);
+    public CreateProductResponse createProduct(UUID userId, CreateProductRequest request) {
+        User user = userRepository.getReferenceById(userId);
         List<Category> categories = request.categories().stream()
                 .map(categoryRepository::getReferenceById)
                 .toList();
 
         Product product = Product.builder()
-                //.designer(user)
+                .designer(user)
                 .categories(categories)
                 .title(request.title())
                 .description(request.description())

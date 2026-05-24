@@ -1,9 +1,12 @@
 package com.perfectmarket.modules.product;
 
+import com.perfectmarket.modules.auth.UserPrincipal;
 import com.perfectmarket.modules.product.dto.request.CreateProductRequest;
 import com.perfectmarket.modules.product.dto.response.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -16,10 +19,13 @@ public class ProductController {
     private final ProductService productService;
 
     // TODO: Create Product (Designer only)
-    // FIXME: Get userId and check role from Spring Security (after complete login)
     @PostMapping("/add")
-    public ResponseEntity<CreateProductResponse> createProduct(@RequestBody CreateProductRequest createProductRequest) {
-        return ResponseEntity.ok(productService.createProduct(createProductRequest));
+    @PreAuthorize("hasRole('ROLE_DESIGNER')")
+    public ResponseEntity<CreateProductResponse> createProduct(@RequestBody CreateProductRequest createProductRequest,
+                                                               Authentication authentication) {
+        UserPrincipal principal = (UserPrincipal) authentication.getPrincipal();
+        UUID userId = principal.id();
+        return ResponseEntity.ok(productService.createProduct(userId, createProductRequest));
     }
 
     // TODO: List Products with Filters (Designer, Category, Sort by price/sold)
