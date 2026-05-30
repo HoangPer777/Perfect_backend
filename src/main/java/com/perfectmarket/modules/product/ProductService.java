@@ -96,6 +96,17 @@ public class ProductService {
         return mapperProductToResponse(savedProduct);
     }
 
+    public Boolean deleteProduct(UUID productId, UUID userId) {
+        Product product = productRepository.findByIdAndIsActiveAndDesigner_Id(productId, true, userId);
+        if (product == null) {
+            throw new EntityNotFoundException("Product not found");
+        }
+
+        product.setActive(false);
+        productRepository.save(product);
+        return true;
+    }
+
     public CreateProductResponse getProductByDesigner(UUID userId, UUID productId) {
         Product product = productRepository.findByIdAndIsActiveAndDesigner_Id(productId, true, userId);
         if(product == null) {
