@@ -20,12 +20,20 @@ public class ProductController {
 
     // TODO: Create Product (Designer only)
     @PostMapping("/add")
-    @PreAuthorize("hasRole('ROLE_DESIGNER')")
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_DESIGNER')")
     public ResponseEntity<CreateProductResponse> createProduct(@RequestBody CreateProductRequest createProductRequest,
                                                                Authentication authentication) {
         UserPrincipal principal = (UserPrincipal) authentication.getPrincipal();
         UUID userId = principal.id();
         return ResponseEntity.ok(productService.createProduct(userId, createProductRequest));
+    }
+
+    @PutMapping("/update")
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_DESIGNER')")
+    public ResponseEntity<CreateProductResponse> updateProduct(@RequestBody CreateProductRequest createProductRequest, Authentication authentication) {
+        UserPrincipal principal = (UserPrincipal) authentication.getPrincipal();
+        UUID userId = principal.id();
+        return ResponseEntity.ok(productService.updateProduct(userId, createProductRequest));
     }
 
     // TODO: List Products with Filters (Designer, Category, Sort by price/sold)

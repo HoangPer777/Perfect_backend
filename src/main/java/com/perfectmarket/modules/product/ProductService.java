@@ -11,9 +11,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.PageRequest;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -52,6 +52,59 @@ public class ProductService {
         return mapperProductToResponse(savedProduct);
     }
 
+    @Transactional
+    public CreateProductResponse updateProduct(UUID userId, CreateProductRequest request) {
+        Product product = productRepository.findByIdAndIsActiveAndDesigner_Id(request.id(), true, userId);
+        if(product == null) {
+            throw new EntityNotFoundException("Product not found");
+        }
+
+        product.setTitle(request.title());
+        product.setDescription(request.description());
+        product.setThumbnailUrl(request.thumbnailUrl());
+        product.setStatus(request.status());
+
+        List<ProductImage> currentImages = product.getImages();
+        if (currentImages == null) {
+            currentImages = new ArrayList<>();
+        }
+
+        Map<String, ProductImage> existingImagesMap = currentImages.stream()
+                .collect(Collectors.toMap(ProductImage::getUrl, image -> image, (existing, replacement) -> existing));
+
+        List<ProductImage> updatedImages = new ArrayList<>();
+
+        for (String url : request.images()) {
+            if (existingImagesMap.containsKey(url)) {
+                updatedImages.add(existingImagesMap.get(url));
+            } else {
+                ProductImage newImage = new ProductImage();
+                newImage.setUrl(url);
+                newImage.setProduct(product);
+                updatedImages.add(newImage);
+            }
+        }
+
+        product.setImages(updatedImages);
+
+        List<Category> categories = request.categories().stream()
+                .map(categoryRepository::getReferenceById)
+                .collect(Collectors.toList());
+        product.setCategories(categories);
+
+        Product savedProduct = productRepository.save(product);
+        return mapperProductToResponse(savedProduct);
+    }
+
+    public CreateProductResponse getProductByDesigner(UUID userId, UUID productId) {
+        Product product = productRepository.findByIdAndIsActiveAndDesigner_Id(productId, true, userId);
+        if(product == null) {
+            throw new EntityNotFoundException("Product not found");
+        }
+
+        return mapperProductToResponse(product);
+    }
+
     private CreateProductResponse mapperProductToResponse(Product product) {
         List<CreateProductResponse.ProductImageResponse> images = Optional.ofNullable(product.getImages())
                 .orElse(List.of())
@@ -82,9 +135,16 @@ public class ProductService {
         List<ProductDetailResponse.ImageResponse> images = Optional.ofNullable(product.getImages()).orElse(List.of())
                 .stream().map(i -> new ProductDetailResponse.ImageResponse(i.getId(), i.getUrl())).toList();
 
+        List<ProductDetailResponse.CategoryResponse> categories = Optional.ofNullable(product.getCategories())
+                .orElse(List.of())
+                .stream()
+                .map(c -> new ProductDetailResponse.CategoryResponse(c.getId(), c.getName()))
+                .toList();
+
+
         return new ProductDetailResponse(product.getId(), designer, product.getTitle(), product.getDescription(),
                 product.getPrice(), product.getThumbnailUrl(), product.getViewCount(), product.getSoldCount(),
-                product.getRatingAvg(), images, product.getCreatedAt(), product.getUpdatedAt());
+                product.getRatingAvg(), images, categories, product.getCreatedAt(), product.getUpdatedAt());
     }
 
     @Transactional(readOnly = true)
