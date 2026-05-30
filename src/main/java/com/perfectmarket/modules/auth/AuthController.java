@@ -44,9 +44,12 @@ public class AuthController {
 
     @GetMapping("/me")
     public ResponseEntity<AuthResponse.UserInfo> me(
-        @AuthenticationPrincipal String email
+        @AuthenticationPrincipal UserPrincipal principal
     ) {
-        return ResponseEntity.ok(authService.me(email));
+        if (principal == null) {
+            return ResponseEntity.status(org.springframework.http.HttpStatus.UNAUTHORIZED).build();
+        }
+        return ResponseEntity.ok(authService.me(principal.email()));
     }
 
     /** Logout — client chỉ cần xóa token phía frontend */
