@@ -16,9 +16,11 @@ public record ProductDetailResponse(
         Integer soldCount,
         Double ratingAvg,
         List<ImageResponse> images,
+        List<CategoryResponse> categories,
         LocalDateTime createdAt,
         LocalDateTime updatedAt
 ) {
     public record DesignerResponse(UUID id, String email, String username, String avatarUrl) {}
     public record ImageResponse(UUID id, String url) {}
+    public record CategoryResponse(UUID id, String name) {}
 }
