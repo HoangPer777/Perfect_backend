@@ -1,6 +1,7 @@
 package com.perfectmarket.modules.product;
 
 import com.perfectmarket.modules.auth.User;
+import com.perfectmarket.modules.service.ServicePackage;
 import jakarta.persistence.*;
 import lombok.*;
 import java.math.BigDecimal;
@@ -43,6 +44,10 @@ public class Product {
 
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ProductImage> images;
+
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ServicePackage> packages;
+
     private boolean isActive;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
@@ -54,6 +59,11 @@ public class Product {
         ratingAvg = 0;
         isActive = true;
         createdAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
         updatedAt = LocalDateTime.now();
     }
 
