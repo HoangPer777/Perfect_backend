@@ -12,5 +12,7 @@ import java.util.UUID;
 public interface CartRepository extends JpaRepository<CartItem, UUID> {
     @EntityGraph(attributePaths = {"servicePackage", "servicePackage.product", "servicePackage.product.designer"})
     Page<CartItem> findAllByUser_Id(UUID id, Pageable pageable);
-    CartItem findByUser_IdAndServicePackage_Id(UUID id, UUID servicePackageId);
+    boolean existsByUser_IdAndServicePackage_Id(UUID userId, UUID servicePackageId);
+    Integer countByUser_Id(UUID id);
+    int deleteByIdAndUser_Id(UUID id, UUID userId);
 }

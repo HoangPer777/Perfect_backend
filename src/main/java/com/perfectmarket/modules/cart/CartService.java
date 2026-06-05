@@ -1,7 +1,7 @@
 package com.perfectmarket.modules.cart;
 
 import com.perfectmarket.modules.auth.UserRepository;
-import com.perfectmarket.modules.cart.dto.request.UpdateCartItemRequest;
+import com.perfectmarket.modules.cart.dto.response.AddCartItemResponse;
 import com.perfectmarket.modules.cart.dto.response.CartItemResponse;
 import com.perfectmarket.modules.product.Product;
 import com.perfectmarket.modules.service.ServicePackage;
@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.NoSuchElementException;
 import java.util.UUID;
@@ -25,6 +26,10 @@ public class CartService {
         return cartRepository.findAllByUser_Id(userId, pageable).map(this::mapperToCartItemResponse);
     }
 
+    public Integer countCartItems(UUID userId) {
+        return cartRepository.countByUser_Id(userId);
+    }
+
     private CartItemResponse mapperToCartItemResponse(CartItem cartItem) {
         Product product = cartItem.getServicePackage().getProduct();
         ServicePackage servicePackage = cartItem.getServicePackage();
@@ -34,6 +39,7 @@ public class CartService {
                         .id(product.getId())
                         .title(product.getTitle())
                         .thumbnailUrl(product.getThumbnailUrl())
+                        .designerId(product.getDesigner().getId())
                         .designerUsername(product.getDesigner().getUsername())
                         .build())
                 .serviceId(servicePackage.getId())
@@ -46,7 +52,10 @@ public class CartService {
         return response;
     }
 
-    public CartItemResponse addCartItem(UUID userId, UUID serviceId) {
+    public AddCartItemResponse addCartItem(UUID userId, UUID serviceId) {
+        if(cartRepository.existsByUser_IdAndServicePackage_Id(userId, serviceId)) {
+            return new AddCartItemResponse(false, true);
+        }
         CartItem cartItem = CartItem.builder()
                 .user(userRepository.getReferenceById(userId))
                 .servicePackage(servicePackageRepository.findById(serviceId).orElseThrow(
@@ -54,27 +63,13 @@ public class CartService {
                 ))
                 .build();
         cartItem = cartRepository.save(cartItem);
-        return mapperToCartItemResponse(cartItem);
+        return new AddCartItemResponse(cartItem.getId() != null, cartItem.getId() != null);
     }
 
-    public boolean deleteCartItem(UUID userId, UUID serviceId) {
-        CartItem cartItem = cartRepository.findByUser_IdAndServicePackage_Id(userId, serviceId);
-        if (cartItem != null) {
-            cartRepository.delete(cartItem);
-        }
-        return true;
-    }
-
-    public CartItemResponse changeServicePackage(UUID userId, UpdateCartItemRequest request) {
-        CartItem cartItem = cartRepository.findByUser_IdAndServicePackage_Id(userId, request.oldServiceId());
-        if (cartItem == null) throw new NoSuchElementException("Not existing service package!");
-
-        cartItem.setServicePackage(servicePackageRepository.findById(request.newServiceId()).orElseThrow(
-                () -> new NoSuchElementException("Not existing service package!")
-        ));
-
-        cartItem = cartRepository.save(cartItem);
-        return mapperToCartItemResponse(cartItem);
+    @Transactional
+    public boolean deleteCartItem(UUID userId, UUID cartItemId) {
+        int rowChanges = cartRepository.deleteByIdAndUser_Id(cartItemId, userId);
+        return rowChanges > 0;
     }
 
 }

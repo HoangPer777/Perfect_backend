@@ -1,7 +1,7 @@
 package com.perfectmarket.modules.cart;
 
 import com.perfectmarket.modules.auth.UserPrincipal;
-import com.perfectmarket.modules.cart.dto.request.UpdateCartItemRequest;
+import com.perfectmarket.modules.cart.dto.response.AddCartItemResponse;
 import com.perfectmarket.modules.cart.dto.response.CartItemResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -29,17 +29,16 @@ public class CartController {
         return ResponseEntity.ok(cartService.getCartItems(userId, pageable));
     }
 
-    @PostMapping("/add")
-    public ResponseEntity<CartItemResponse> addCartItem(@RequestBody UUID serviceId, @AuthenticationPrincipal UserPrincipal principal) {
+    @GetMapping("/count")
+    public ResponseEntity<Integer> countCarts(@AuthenticationPrincipal UserPrincipal principal) {
         UUID userId = principal.id();
-        return ResponseEntity.ok(cartService.addCartItem(userId, serviceId));
+        return ResponseEntity.ok(cartService.countCartItems(userId));
     }
 
-    @PutMapping("/update")
-    public ResponseEntity<CartItemResponse> updateCartItem(@RequestBody UpdateCartItemRequest request,
-                                                           @AuthenticationPrincipal UserPrincipal principal) {
+    @PostMapping("/add")
+    public ResponseEntity<AddCartItemResponse> addCartItem(@RequestBody UUID serviceId, @AuthenticationPrincipal UserPrincipal principal) {
         UUID userId = principal.id();
-        return ResponseEntity.ok(cartService.changeServicePackage(userId, request));
+        return ResponseEntity.ok(cartService.addCartItem(userId, serviceId));
     }
 
     @DeleteMapping("/delete/{id}")

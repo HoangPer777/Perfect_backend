@@ -11,5 +11,5 @@ public record CartItemResponse(UUID id, ProductResponse product, UUID serviceId,
                                ServicePackage.PackageType packageType,
                                BigDecimal price, int deliveryDays, int revisionsLimit) {
     @Builder
-    public record ProductResponse(UUID id, String designerUsername, String title, String thumbnailUrl) {}
+    public record ProductResponse(UUID id, UUID designerId, String designerUsername, String title, String thumbnailUrl) {}
 }
