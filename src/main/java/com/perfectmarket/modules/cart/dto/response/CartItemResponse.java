@@ -7,7 +7,8 @@ import java.math.BigDecimal;
 import java.util.UUID;
 
 @Builder
-public record CartItemResponse(UUID id, ProductResponse product, UUID serviceId, String title, ServicePackage.PackageType packageType,
+public record CartItemResponse(UUID id, ProductResponse product, UUID serviceId, String title,
+                               ServicePackage.PackageType packageType,
                                BigDecimal price, int deliveryDays, int revisionsLimit) {
     @Builder
     public record ProductResponse(UUID id, String designerUsername, String title, String thumbnailUrl) {}

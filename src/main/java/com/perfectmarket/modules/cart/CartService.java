@@ -1,6 +1,7 @@
 package com.perfectmarket.modules.cart;
 
 import com.perfectmarket.modules.auth.UserRepository;
+import com.perfectmarket.modules.cart.dto.request.UpdateCartItemRequest;
 import com.perfectmarket.modules.cart.dto.response.CartItemResponse;
 import com.perfectmarket.modules.product.Product;
 import com.perfectmarket.modules.service.ServicePackage;
@@ -64,11 +65,11 @@ public class CartService {
         return true;
     }
 
-    public CartItemResponse changeServicePackage(UUID userId, UUID oldServiceId, UUID newServiceId) {
-        CartItem cartItem = cartRepository.findByUser_IdAndServicePackage_Id(userId, oldServiceId);
+    public CartItemResponse changeServicePackage(UUID userId, UpdateCartItemRequest request) {
+        CartItem cartItem = cartRepository.findByUser_IdAndServicePackage_Id(userId, request.oldServiceId());
         if (cartItem == null) throw new NoSuchElementException("Not existing service package!");
 
-        cartItem.setServicePackage(servicePackageRepository.findById(newServiceId).orElseThrow(
+        cartItem.setServicePackage(servicePackageRepository.findById(request.newServiceId()).orElseThrow(
                 () -> new NoSuchElementException("Not existing service package!")
         ));
 

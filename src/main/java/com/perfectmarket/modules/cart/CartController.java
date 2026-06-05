@@ -1,6 +1,7 @@
 package com.perfectmarket.modules.cart;
 
 import com.perfectmarket.modules.auth.UserPrincipal;
+import com.perfectmarket.modules.cart.dto.request.UpdateCartItemRequest;
 import com.perfectmarket.modules.cart.dto.response.CartItemResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -35,10 +36,10 @@ public class CartController {
     }
 
     @PutMapping("/update")
-    public ResponseEntity<CartItemResponse> updateCartItem(@RequestBody UUID serviceId, @RequestBody UUID serviceIdNew,
+    public ResponseEntity<CartItemResponse> updateCartItem(@RequestBody UpdateCartItemRequest request,
                                                            @AuthenticationPrincipal UserPrincipal principal) {
         UUID userId = principal.id();
-        return ResponseEntity.ok(cartService.changeServicePackage(userId, serviceId, serviceIdNew));
+        return ResponseEntity.ok(cartService.changeServicePackage(userId, request));
     }
 
     @DeleteMapping("/delete/{id}")
