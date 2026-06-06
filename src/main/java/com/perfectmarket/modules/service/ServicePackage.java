@@ -1,6 +1,7 @@
 package com.perfectmarket.modules.service;
 
 import com.perfectmarket.modules.auth.User;
+import com.perfectmarket.modules.product.Product;
 import jakarta.persistence.*;
 import lombok.*;
 import java.math.BigDecimal;
@@ -17,6 +18,10 @@ public class ServicePackage {
     @ManyToOne
     @JoinColumn(name = "designer_id")
     private User designer;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "product_id", nullable = false)
+    private Product product;
 
     private String title;
     private String description;
