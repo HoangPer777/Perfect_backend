@@ -20,7 +20,7 @@ public class ServicePackage {
     private User designer;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "product_id", nullable = false)
+    @JoinColumn(name = "product_id")
     private Product product;
 
     private String title;

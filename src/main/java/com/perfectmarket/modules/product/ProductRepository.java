@@ -17,6 +17,9 @@ public interface ProductRepository extends JpaRepository<Product, UUID> {
     @EntityGraph(attributePaths = {"designer", "images"})
     Product findByIdAndIsActiveAndDesigner_Id(UUID id, boolean isActive, UUID userId);
 
+    @EntityGraph(attributePaths = {"designer", "images", "categories"})
+    List<Product> findByDesigner_IdAndIsActiveOrderByCreatedAtDesc(UUID designerId, boolean isActive);
+
     // TODO: Add complex search queries or integrate with Meilisearch
     @Query("SELECT p FROM Product p ORDER BY p.viewCount DESC LIMIT 10")
     List<Product> findTop10ByOrderByViewCountDesc();

@@ -217,4 +217,12 @@ public class ProductService {
     public List<CategoryResponse> findAllLeafCategories() {
         return categoryRepository.findAllLeafCategories().stream().map(c -> new CategoryResponse(c.getId(), c.getName(), c.getIcon(), c.getSlug())).toList();
     }
+
+    @Transactional(readOnly = true)
+    public List<CreateProductResponse> getProductsByDesignerId(UUID designerId) {
+        return productRepository.findByDesigner_IdAndIsActiveOrderByCreatedAtDesc(designerId, true)
+                .stream()
+                .map(this::mapperProductToResponse)
+                .toList();
+    }
 }
