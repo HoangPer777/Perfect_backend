@@ -75,5 +75,13 @@ public class ProductController {
     public ResponseEntity<List<CategoryResponse>> getAllLeafCategories() {
         return ResponseEntity.ok(productService.findAllLeafCategories());
     }
+
+    @GetMapping("/my-products")
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_DESIGNER')")
+    public ResponseEntity<List<CreateProductResponse>> getMyProducts(Authentication authentication) {
+        UserPrincipal principal = (UserPrincipal) authentication.getPrincipal();
+        UUID userId = principal.id();
+        return ResponseEntity.ok(productService.getProductsByDesignerId(userId));
+    }
     // TODO: Like/Comment on Product
 }

@@ -9,4 +9,5 @@ import java.util.UUID;
 @Repository
 public interface ServicePackageRepository extends JpaRepository<ServicePackage, UUID> {
     List<ServicePackage> findAllByProduct_Id(UUID id);
+    List<ServicePackage> findAllByDesigner_Id(UUID designerId);
 }
