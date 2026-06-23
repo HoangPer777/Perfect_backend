@@ -219,10 +219,8 @@ public class ProductService {
     }
 
     @Transactional(readOnly = true)
-    public List<CreateProductResponse> getProductsByDesignerId(UUID designerId) {
-        return productRepository.findByDesigner_IdAndIsActiveOrderByCreatedAtDesc(designerId, true)
-                .stream()
-                .map(this::mapperProductToResponse)
-                .toList();
+    public List<SnapshotProductResponse> getProductsByDesignerId(UUID designerId) {
+        return productRepository.getProductByDesignerId(designerId);
     }
+
 }

@@ -78,7 +78,7 @@ public class ProductController {
 
     @GetMapping("/my-products")
     @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_DESIGNER')")
-    public ResponseEntity<List<CreateProductResponse>> getMyProducts(Authentication authentication) {
+    public ResponseEntity<List<SnapshotProductResponse>> getMyProducts(Authentication authentication) {
         UserPrincipal principal = (UserPrincipal) authentication.getPrincipal();
         UUID userId = principal.id();
         return ResponseEntity.ok(productService.getProductsByDesignerId(userId));

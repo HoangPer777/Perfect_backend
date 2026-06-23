@@ -2,6 +2,8 @@ package com.perfectmarket.modules.service;
 
 import com.perfectmarket.modules.auth.User;
 import com.perfectmarket.modules.auth.UserRepository;
+import com.perfectmarket.modules.product.Product;
+import com.perfectmarket.modules.product.ProductRepository;
 import com.perfectmarket.modules.service.dto.request.CreateServicePackageRequest;
 import com.perfectmarket.modules.service.dto.request.UpdateServicePackageRequest;
 import com.perfectmarket.modules.service.dto.response.ServicePackageResponse;
@@ -16,6 +18,7 @@ import java.util.UUID;
 public class ServicePackageService {
     private final ServicePackageRepository servicePackageRepository;
     private final UserRepository userRepository;
+    private final ProductRepository productRepository;
 
     public List<ServicePackageResponse> getServicePackagesByProductId(UUID productId) {
         return servicePackageRepository.findAllByProduct_Id(productId).stream().map(s -> new ServicePackageResponse(
@@ -23,8 +26,8 @@ public class ServicePackageService {
         )).toList();
     }
 
-    public List<ServicePackageResponse> getMyPackages(UUID designerId) {
-        return servicePackageRepository.findAllByDesigner_Id(designerId)
+    public List<ServicePackageResponse> getMyPackages(UUID productId, UUID designerId) {
+        return servicePackageRepository.findAllByProduct_IdAndDesigner_IdAndStatus(productId, designerId, "ACTIVE")
                 .stream()
                 .map(p -> new ServicePackageResponse(
                         p.getId(),
@@ -45,8 +48,14 @@ public class ServicePackageService {
         User designer = userRepository.findById(designerId)
                 .orElseThrow(() -> new RuntimeException("Designer not found"));
 
+        Product product = productRepository.findByIdAndIsActiveAndDesigner_Id(request.productId(), true, designerId);
+        if (product == null) {
+            throw new RuntimeException("Product not found");
+        }
+
         ServicePackage service = new ServicePackage();
         service.setDesigner(designer);
+        service.setProduct(product);
         service.setTitle(request.title());
         service.setDescription(request.description());
         service.setPackageType(request.packageType());
