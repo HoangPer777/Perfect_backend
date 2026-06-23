@@ -23,7 +23,7 @@ public class Product {
     private User designer;
 
     private String title;
-    @Column(length = 1024)
+    @Column(columnDefinition = "TEXT")
     private String description;
     private BigDecimal price;
     private String thumbnailUrl;

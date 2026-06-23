@@ -4,6 +4,8 @@ import com.perfectmarket.modules.auth.User;
 import com.perfectmarket.modules.service.ServicePackage;
 import jakarta.persistence.*;
 import lombok.*;
+
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -36,6 +38,7 @@ public class Task {
     
     private int revisionsLeft;
 
+    private BigDecimal actualPrice;
     private LocalDateTime startedAt;
     private LocalDateTime completedAt;
     private LocalDateTime createdAt;

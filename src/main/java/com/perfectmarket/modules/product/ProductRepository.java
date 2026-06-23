@@ -1,11 +1,14 @@
 package com.perfectmarket.modules.product;
 
 import com.perfectmarket.modules.product.dto.response.DesignerProjection;
+import com.perfectmarket.modules.product.dto.response.SnapshotProductResponse;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.repository.query.Param;
+
 import java.util.List;
 import java.util.UUID;
 
@@ -19,6 +22,21 @@ public interface ProductRepository extends JpaRepository<Product, UUID> {
 
     @EntityGraph(attributePaths = {"designer", "images", "categories"})
     List<Product> findByDesigner_IdAndIsActiveOrderByCreatedAtDesc(UUID designerId, boolean isActive);
+
+    @Query(value = """
+    SELECT 
+        p.id as id, 
+        p.title as title, 
+        p.thumbnailUrl as thumbnailUrl, 
+        p.status as status, 
+        p.viewCount as viewCount, 
+        p.soldCount as soldCount, 
+        p.createdAt as createdAt 
+    FROM Product p 
+    WHERE p.designer.id = :designerId AND p.isActive = true
+    ORDER BY p.createdAt DESC
+""")
+    List<SnapshotProductResponse> getProductByDesignerId(@Param("designerId") UUID designerId);
 
     // TODO: Add complex search queries or integrate with Meilisearch
     @Query("SELECT p FROM Product p ORDER BY p.viewCount DESC LIMIT 10")

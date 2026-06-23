@@ -24,10 +24,10 @@ public class ServicePackageController {
         return ResponseEntity.ok(servicePackageService.getServicePackagesByProductId(productId));
     }
 
-    @GetMapping("/my-packages")
-    public ResponseEntity<List<ServicePackageResponse>> getMyPackages(Authentication authentication) {
+    @GetMapping("/my-packages/{productId}")
+    public ResponseEntity<List<ServicePackageResponse>> getMyPackages(@PathVariable UUID productId, Authentication authentication) {
         UserPrincipal principal = (UserPrincipal) authentication.getPrincipal();
-        return ResponseEntity.ok(servicePackageService.getMyPackages(principal.id()));
+        return ResponseEntity.ok(servicePackageService.getMyPackages(productId, principal.id()));
     }
 
     @PostMapping("/create")
