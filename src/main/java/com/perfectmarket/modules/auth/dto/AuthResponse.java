@@ -14,7 +14,11 @@ public record AuthResponse(
         String fullName,
         String username,
         String avatarUrl,
-        Set<String> roles
+        Set<String> roles,
+        String city,
+        String detailedAddress,
+        boolean emailNotifications,
+        boolean promotionalOffers
     ) {}
 
     public static AuthResponse of(String token, com.perfectmarket.modules.auth.User user) {
@@ -24,8 +28,12 @@ public record AuthResponse(
         return new AuthResponse(
             token,
             "Bearer",
-            new UserInfo(user.getId(), user.getEmail(), user.getFullName(),
-                         user.getUsername(), user.getAvatarUrl(), roles)
+            new UserInfo(
+                user.getId(), user.getEmail(), user.getFullName(),
+                user.getUsername(), user.getAvatarUrl(), roles,
+                user.getCity(), user.getDetailedAddress(),
+                user.isEmailNotifications(), user.isPromotionalOffers()
+            )
         );
     }
 }

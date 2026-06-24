@@ -60,4 +60,40 @@ public class EmailService {
             log.warn("Failed to send reset email to {}: {}", toEmail, e.getMessage());
         }
     }
+
+    public void sendVerificationEmail(String toEmail, String token) {
+        String verifyLink = frontendUrl + "/verify-email?token=" + token;
+
+        log.info("=== EMAIL VERIFICATION LINK ===");
+        log.info("To: {}", toEmail);
+        log.info("Link: {}", verifyLink);
+        log.info("===============================");
+
+        if (mailPassword == null || mailPassword.isBlank()) {
+            log.info("MAIL_PASSWORD not set — dùng link ở trên để test.");
+            return;
+        }
+
+        try {
+            SimpleMailMessage msg = new SimpleMailMessage();
+            msg.setFrom(fromEmail);
+            msg.setTo(toEmail);
+            msg.setSubject("Perfect Market — Verify your email");
+            msg.setText("""
+                Hi,
+
+                Welcome to Perfect Market! Please verify your email by clicking the link below:
+
+                %s
+
+                If you didn't register on our website, ignore this email.
+
+                — Perfect Market Team
+                """.formatted(verifyLink));
+            mailSender.send(msg);
+            log.info("Verification email sent to {}", toEmail);
+        } catch (Exception e) {
+            log.warn("Failed to send verification email to {}: {}", toEmail, e.getMessage());
+        }
+    }
 }

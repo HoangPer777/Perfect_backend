@@ -46,6 +46,18 @@ public class User {
     private String provider = "LOCAL";
 
     private String providerId;
+
+    private String city;
+
+    private String detailedAddress;
+
+    @Column(nullable = false)
+    @Builder.Default
+    private boolean emailNotifications = true;
+
+    @Column(nullable = false)
+    @Builder.Default
+    private boolean promotionalOffers = false;
     // ---------------------------------
 
     @ManyToMany(fetch = FetchType.EAGER)

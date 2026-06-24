@@ -52,6 +52,33 @@ public class AuthController {
         return ResponseEntity.ok(authService.me(principal.email()));
     }
 
+    @PostMapping("/verify-email")
+    public ResponseEntity<Map<String, String>> verifyEmail(
+        @Valid @RequestBody VerifyEmailRequest req
+    ) {
+        authService.verifyEmail(req.token());
+        return ResponseEntity.ok(Map.of("message", "Email verified successfully."));
+    }
+
+    @PostMapping("/resend-verification")
+    public ResponseEntity<Map<String, String>> resendVerification(
+        @Valid @RequestBody ResendVerificationRequest req
+    ) {
+        authService.resendVerificationEmail(req.email());
+        return ResponseEntity.ok(Map.of("message", "Verification email resent successfully."));
+    }
+
+    @PatchMapping("/profile")
+    public ResponseEntity<AuthResponse.UserInfo> updateProfile(
+        @AuthenticationPrincipal UserPrincipal principal,
+        @Valid @RequestBody UpdateProfileRequest req
+    ) {
+        if (principal == null) {
+            return ResponseEntity.status(org.springframework.http.HttpStatus.UNAUTHORIZED).build();
+        }
+        return ResponseEntity.ok(authService.updateProfile(principal.email(), req));
+    }
+
     /** Logout — client chỉ cần xóa token phía frontend */
     @PostMapping("/logout")
     public ResponseEntity<Map<String, String>> logout() {
