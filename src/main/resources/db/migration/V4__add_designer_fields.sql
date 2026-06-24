@@ -1,0 +1,6 @@
+-- Thêm các cột thông tin designer mới vào bảng users
+ALTER TABLE users ADD COLUMN IF NOT EXISTS specialization VARCHAR(255);
+ALTER TABLE users ADD COLUMN IF NOT EXISTS bio TEXT;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS portfolio_url VARCHAR(500);
+ALTER TABLE users ADD COLUMN IF NOT EXISTS skills VARCHAR(500);
+ALTER TABLE users ADD COLUMN IF NOT EXISTS experience_years INT DEFAULT 0;

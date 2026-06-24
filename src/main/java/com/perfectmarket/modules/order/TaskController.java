@@ -41,4 +41,12 @@ public class TaskController {
         UUID userId = principal.id();
         return ResponseEntity.ok(taskService.getFullDashboardAnalytics(userId));
     }
+
+    @GetMapping("/customer")
+    public ResponseEntity<java.util.List<Task>> getCustomerTasks(@AuthenticationPrincipal UserPrincipal principal) {
+        if (principal == null) {
+            return ResponseEntity.status(org.springframework.http.HttpStatus.UNAUTHORIZED).build();
+        }
+        return ResponseEntity.ok(taskService.getTasksForUser(principal.id()));
+    }
 }

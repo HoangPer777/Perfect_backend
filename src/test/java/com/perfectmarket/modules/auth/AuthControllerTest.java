@@ -52,7 +52,8 @@ public class AuthControllerTest {
         
         AuthResponse.UserInfo userInfo = new AuthResponse.UserInfo(
                 UUID.randomUUID(), "test@example.com", "Test User", "test_user", "avatar.jpg", Set.of("ROLE_CUSTOMER"),
-                "Ho Chi Minh City", "Thu Duc District", true, false
+                "Ho Chi Minh City", "Thu Duc District", true, false, "LOCAL",
+                null, null, null, null, 0
         );
         AuthResponse resp = new AuthResponse("mocked_jwt_token", "Bearer", userInfo);
 
@@ -74,7 +75,8 @@ public class AuthControllerTest {
         
         AuthResponse.UserInfo userInfo = new AuthResponse.UserInfo(
                 UUID.randomUUID(), "test@example.com", "Test User", "test_user", "avatar.jpg", Set.of("ROLE_CUSTOMER"),
-                "Ho Chi Minh City", "Thu Duc District", true, false
+                "Ho Chi Minh City", "Thu Duc District", true, false, "LOCAL",
+                null, null, null, null, 0
         );
         AuthResponse resp = new AuthResponse("mocked_jwt_token", "Bearer", userInfo);
 
@@ -113,7 +115,8 @@ public class AuthControllerTest {
 
         AuthResponse.UserInfo userInfo = new AuthResponse.UserInfo(
                 id, "test@example.com", "Test User", "test@example.com", "avatar.jpg", Set.of("ROLE_CUSTOMER"),
-                "Ho Chi Minh City", "Thu Duc District", true, false
+                "Ho Chi Minh City", "Thu Duc District", true, false, "LOCAL",
+                null, null, null, null, 0
         );
         when(authService.me("test@example.com")).thenReturn(userInfo);
 

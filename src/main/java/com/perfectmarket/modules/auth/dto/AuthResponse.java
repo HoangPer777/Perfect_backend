@@ -18,7 +18,13 @@ public record AuthResponse(
         String city,
         String detailedAddress,
         boolean emailNotifications,
-        boolean promotionalOffers
+        boolean promotionalOffers,
+        String provider,
+        String specialization,
+        String bio,
+        String portfolioUrl,
+        String skills,
+        Integer experienceYears
     ) {}
 
     public static AuthResponse of(String token, com.perfectmarket.modules.auth.User user) {
@@ -32,7 +38,13 @@ public record AuthResponse(
                 user.getId(), user.getEmail(), user.getFullName(),
                 user.getUsername(), user.getAvatarUrl(), roles,
                 user.getCity(), user.getDetailedAddress(),
-                user.isEmailNotifications(), user.isPromotionalOffers()
+                user.isEmailNotifications(), user.isPromotionalOffers(),
+                user.getProvider(),
+                user.getSpecialization(),
+                user.getBio(),
+                user.getPortfolioUrl(),
+                user.getSkills(),
+                user.getExperienceYears()
             )
         );
     }

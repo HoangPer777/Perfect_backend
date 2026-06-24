@@ -56,16 +56,16 @@ public class AuthService {
 
         userRepository.save(user);
 
-        // Generate email verification token
-        String token = UUID.randomUUID().toString();
+        // Generate email verification OTP
+        String otp = String.format("%06d", new java.util.Random().nextInt(1000000));
         EmailVerificationToken evt = EmailVerificationToken.builder()
                 .user(user)
-                .token(token)
+                .token(otp)
                 .expiresAt(Instant.now().plus(24, ChronoUnit.HOURS))
                 .build();
         emailVerificationTokenRepository.save(evt);
 
-        emailService.sendVerificationEmail(user.getEmail(), token);
+        emailService.sendVerificationEmail(user.getEmail(), otp);
 
         return AuthResponse.of("", user);
     }
@@ -106,14 +106,14 @@ public class AuthService {
             // Invalidate old tokens
             resetTokenRepository.deleteByUser(user);
 
-            String token = UUID.randomUUID().toString();
+            String otp = String.format("%06d", new java.util.Random().nextInt(1000000));
             PasswordResetToken prt = PasswordResetToken.builder()
                     .user(user)
-                    .token(token)
+                    .token(otp)
                     .expiresAt(Instant.now().plus(resetExpiryMinutes, ChronoUnit.MINUTES))
                     .build();
             resetTokenRepository.save(prt);
-            emailService.sendPasswordResetEmail(email, token);
+            emailService.sendPasswordResetEmail(email, otp);
         });
         // Always return success to prevent email enumeration
     }
@@ -168,15 +168,15 @@ public class AuthService {
 
         emailVerificationTokenRepository.deleteByUser(user);
 
-        String token = UUID.randomUUID().toString();
+        String otp = String.format("%06d", new java.util.Random().nextInt(1000000));
         EmailVerificationToken evt = EmailVerificationToken.builder()
                 .user(user)
-                .token(token)
+                .token(otp)
                 .expiresAt(Instant.now().plus(24, ChronoUnit.HOURS))
                 .build();
         emailVerificationTokenRepository.save(evt);
 
-        emailService.sendVerificationEmail(user.getEmail(), token);
+        emailService.sendVerificationEmail(user.getEmail(), otp);
     }
 
     // ─── Update Profile ───────────────────────────────────────────────────────
@@ -212,7 +212,13 @@ public class AuthService {
                 user.getId(), user.getEmail(), user.getFullName(),
                 user.getUsername(), user.getAvatarUrl(), roles,
                 user.getCity(), user.getDetailedAddress(),
-                user.isEmailNotifications(), user.isPromotionalOffers()
+                user.isEmailNotifications(), user.isPromotionalOffers(),
+                user.getProvider(),
+                user.getSpecialization(),
+                user.getBio(),
+                user.getPortfolioUrl(),
+                user.getSkills(),
+                user.getExperienceYears()
         );
     }
 
@@ -228,7 +234,58 @@ public class AuthService {
                 user.getId(), user.getEmail(), user.getFullName(),
                 user.getUsername(), user.getAvatarUrl(), roles,
                 user.getCity(), user.getDetailedAddress(),
-                user.isEmailNotifications(), user.isPromotionalOffers()
+                user.isEmailNotifications(), user.isPromotionalOffers(),
+                user.getProvider(),
+                user.getSpecialization(),
+                user.getBio(),
+                user.getPortfolioUrl(),
+                user.getSkills(),
+                user.getExperienceYears()
         );
+    }
+
+    // ─── Change Password & Upgrade Role ───────────────────────────────────────
+
+    @Transactional
+    public void changePassword(String email, String oldPassword, String newPassword) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+        if (!"LOCAL".equals(user.getProvider())) {
+            throw new IllegalArgumentException("Social login accounts cannot change password.");
+        }
+
+        if (user.getPasswordHash() == null ||
+            !passwordEncoder.matches(oldPassword, user.getPasswordHash())) {
+            throw new IllegalArgumentException("Mật khẩu hiện tại không chính xác.");
+        }
+
+        user.setPasswordHash(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+    }
+
+    @Transactional
+    public void upgradeToDesigner(
+            String email,
+            String specialization,
+            String bio,
+            String portfolioUrl,
+            String skills,
+            Integer experienceYears
+    ) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+        Role designerRole = roleRepository.findByName("ROLE_DESIGNER")
+                .orElseThrow(() -> new RuntimeException("Role ROLE_DESIGNER not found"));
+
+        user.getRoles().clear();
+        user.getRoles().add(designerRole);
+        user.setSpecialization(specialization);
+        user.setBio(bio);
+        user.setPortfolioUrl(portfolioUrl);
+        user.setSkills(skills);
+        user.setExperienceYears(experienceYears != null ? experienceYears : 0);
+        userRepository.save(user);
     }
 }
