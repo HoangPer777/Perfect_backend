@@ -52,6 +52,64 @@ public class AuthController {
         return ResponseEntity.ok(authService.me(principal.email()));
     }
 
+    @PostMapping("/verify-email")
+    public ResponseEntity<Map<String, String>> verifyEmail(
+        @Valid @RequestBody VerifyEmailRequest req
+    ) {
+        authService.verifyEmail(req.token());
+        return ResponseEntity.ok(Map.of("message", "Email verified successfully."));
+    }
+
+    @PostMapping("/resend-verification")
+    public ResponseEntity<Map<String, String>> resendVerification(
+        @Valid @RequestBody ResendVerificationRequest req
+    ) {
+        authService.resendVerificationEmail(req.email());
+        return ResponseEntity.ok(Map.of("message", "Verification email resent successfully."));
+    }
+
+    @PatchMapping("/profile")
+    public ResponseEntity<AuthResponse.UserInfo> updateProfile(
+        @AuthenticationPrincipal UserPrincipal principal,
+        @Valid @RequestBody UpdateProfileRequest req
+    ) {
+        if (principal == null) {
+            return ResponseEntity.status(org.springframework.http.HttpStatus.UNAUTHORIZED).build();
+        }
+        return ResponseEntity.ok(authService.updateProfile(principal.email(), req));
+    }
+
+    @PostMapping("/change-password")
+    public ResponseEntity<Map<String, String>> changePassword(
+        @AuthenticationPrincipal UserPrincipal principal,
+        @Valid @RequestBody ChangePasswordRequest req
+    ) {
+        if (principal == null) {
+            return ResponseEntity.status(org.springframework.http.HttpStatus.UNAUTHORIZED).build();
+        }
+        authService.changePassword(principal.email(), req.oldPassword(), req.newPassword());
+        return ResponseEntity.ok(Map.of("message", "Password changed successfully."));
+    }
+
+    @PostMapping("/upgrade-designer")
+    public ResponseEntity<Map<String, String>> upgradeDesigner(
+        @AuthenticationPrincipal UserPrincipal principal,
+        @Valid @RequestBody UpgradeDesignerRequest req
+    ) {
+        if (principal == null) {
+            return ResponseEntity.status(org.springframework.http.HttpStatus.UNAUTHORIZED).build();
+        }
+        authService.upgradeToDesigner(
+            principal.email(),
+            req.specialization(),
+            req.bio(),
+            req.portfolioUrl(),
+            req.skills(),
+            req.experienceYears()
+        );
+        return ResponseEntity.ok(Map.of("message", "Upgraded to designer successfully."));
+    }
+
     /** Logout — client chỉ cần xóa token phía frontend */
     @PostMapping("/logout")
     public ResponseEntity<Map<String, String>> logout() {

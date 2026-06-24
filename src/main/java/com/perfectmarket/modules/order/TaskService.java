@@ -56,7 +56,7 @@ public class TaskService {
     }
 
     public List<Task> getTasksForUser(UUID userId) {
-        return null;
+        return taskRepository.findByCustomerId(userId);
     }
 
     public Map<String, Object> getFullDashboardAnalytics(UUID userId) {

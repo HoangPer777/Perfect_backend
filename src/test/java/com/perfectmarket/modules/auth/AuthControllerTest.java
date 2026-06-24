@@ -51,7 +51,9 @@ public class AuthControllerTest {
         LoginRequest req = new LoginRequest("test@example.com", "password");
         
         AuthResponse.UserInfo userInfo = new AuthResponse.UserInfo(
-                UUID.randomUUID(), "test@example.com", "Test User", "test_user", "avatar.jpg", Set.of("ROLE_CUSTOMER")
+                UUID.randomUUID(), "test@example.com", "Test User", "test_user", "avatar.jpg", Set.of("ROLE_CUSTOMER"),
+                "Ho Chi Minh City", "Thu Duc District", true, false, "LOCAL",
+                null, null, null, null, 0
         );
         AuthResponse resp = new AuthResponse("mocked_jwt_token", "Bearer", userInfo);
 
@@ -72,7 +74,9 @@ public class AuthControllerTest {
         RegisterRequest req = new RegisterRequest("Test User", "test@example.com", "password", "CUSTOMER");
         
         AuthResponse.UserInfo userInfo = new AuthResponse.UserInfo(
-                UUID.randomUUID(), "test@example.com", "Test User", "test_user", "avatar.jpg", Set.of("ROLE_CUSTOMER")
+                UUID.randomUUID(), "test@example.com", "Test User", "test_user", "avatar.jpg", Set.of("ROLE_CUSTOMER"),
+                "Ho Chi Minh City", "Thu Duc District", true, false, "LOCAL",
+                null, null, null, null, 0
         );
         AuthResponse resp = new AuthResponse("mocked_jwt_token", "Bearer", userInfo);
 
@@ -110,7 +114,9 @@ public class AuthControllerTest {
         SecurityContextHolder.getContext().setAuthentication(auth);
 
         AuthResponse.UserInfo userInfo = new AuthResponse.UserInfo(
-                id, "test@example.com", "Test User", "test@example.com", "avatar.jpg", Set.of("ROLE_CUSTOMER")
+                id, "test@example.com", "Test User", "test@example.com", "avatar.jpg", Set.of("ROLE_CUSTOMER"),
+                "Ho Chi Minh City", "Thu Duc District", true, false, "LOCAL",
+                null, null, null, null, 0
         );
         when(authService.me("test@example.com")).thenReturn(userInfo);
 

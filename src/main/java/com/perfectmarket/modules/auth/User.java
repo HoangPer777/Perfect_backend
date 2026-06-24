@@ -46,6 +46,31 @@ public class User {
     private String provider = "LOCAL";
 
     private String providerId;
+
+    private String city;
+
+    private String detailedAddress;
+
+    @Column(nullable = false)
+    @Builder.Default
+    private boolean emailNotifications = true;
+
+    @Column(nullable = false)
+    @Builder.Default
+    private boolean promotionalOffers = false;
+
+    private String specialization;
+
+    @Column(columnDefinition = "TEXT")
+    private String bio;
+
+    private String portfolioUrl;
+
+    private String skills;
+
+    @Column(nullable = false)
+    @Builder.Default
+    private Integer experienceYears = 0;
     // ---------------------------------
 
     @ManyToMany(fetch = FetchType.EAGER)
