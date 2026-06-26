@@ -44,6 +44,7 @@ public class SecurityConfig {
                         })
                 )
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/api/v1/products/view", "/api/v1/products/newest", "/api/v1/products/hottest", "/api/v1/products/{id}").permitAll()
                         .requestMatchers("/api/v1/auth/**", "/login/oauth2/**", "/oauth2/**").permitAll()
                         .anyRequest().authenticated()
                 )
