@@ -88,6 +88,9 @@ public class PaymentController {
 
     private String getSuccessHtml(String provider) {
         return "<html><body style='text-align:center; font-family:sans-serif; padding-top: 50px;'>" +
-               "<h1 style='color: #28a745;'>Thanh toán " + provider + " thành công!</h1></body></html>";
+               "<h1 style='color: #1e3a8a; font-weight: bold;'>Thanh toán " + provider + " thành công!</h1>" +
+               "<p style='font-size: 18px; color: #4b5563;'>Vui lòng đóng cửa sổ này và tiếp tục mua sắm.</p>" +
+               "<button onclick='window.close()' style='margin-top: 20px; padding: 12px 24px; background: #1e3a8a; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold;'>Đóng cửa sổ</button>" +
+               "</body></html>";
     }
 }

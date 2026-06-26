@@ -1,5 +1,6 @@
 package com.perfectmarket.modules.payment.service;
 
+import com.perfectmarket.modules.cart.repository.CartRepository;
 import com.perfectmarket.modules.payment.domain.Money;
 import com.perfectmarket.modules.payment.domain.PaymentSession;
 import com.perfectmarket.modules.payment.domain.PaymentTransaction;
@@ -9,6 +10,8 @@ import com.perfectmarket.modules.payment.enums.PaymentTransactionStatus;
 import com.perfectmarket.modules.payment.enums.PaymentTransactionType;
 import com.perfectmarket.modules.payment.port.PaymentGatewayStrategy;
 import com.perfectmarket.modules.payment.repository.PaymentSessionRepository;
+import com.perfectmarket.modules.product_order.entity.Order;
+import com.perfectmarket.modules.product_order.repository.OrderRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -26,6 +29,8 @@ public class PaymentApplicationService {
 
     private final PaymentSessionRepository sessionRepository;
     private final PaymentGatewayFactory gatewayFactory;
+    private final CartRepository cartRepository;
+    private final OrderRepository orderRepository;
 
     @Transactional
     public String initializePayment(UUID userId, UUID orderId, Long amount, PaymentProvider provider) {
@@ -40,7 +45,7 @@ public class PaymentApplicationService {
             log.info("Đang kiểm tra tính hợp lệ của session trước khi lưu...");
             sessionRepository.saveAndFlush(session);
         } catch (Exception e) {
-            log.error("LỖI KHÔNG TƯỞNG: ", e); // Dòng này sẽ in ra stack trace đầy đủ nhất
+            log.error("LỖI KHÔNG TƯỞNG: ", e);
             throw e;
         }
 
@@ -81,6 +86,25 @@ public class PaymentApplicationService {
 
             session.addTransaction(transaction);
             log.info("Thanh toán thành công. Session {} đã xử lý.", sessionId);
+
+            try {
+                // 1. Truy vấn Order để lấy đúng Customer ID
+                Order order = orderRepository.findById(session.getOrderId())
+                        .orElseThrow(() -> new RuntimeException("Không tìm thấy Order: " + session.getOrderId()));
+
+                UUID customerId = order.getCustomerId();
+
+                // 2. Dọn dẹp giỏ hàng
+                cartRepository.findByUserId(customerId).ifPresent(cart -> {
+                    // Việc gọi clear() và save() sẽ kích hoạt xóa SQL nếu có orphanRemoval = true
+                    cart.getItems().clear();
+                    cartRepository.save(cart);
+                    log.info("Giỏ hàng của user {} đã được làm sạch sau thanh toán.", customerId);
+                });
+            } catch (Exception e) {
+                log.error("Lỗi khi dọn dẹp giỏ hàng sau thanh toán cho đơn hàng {}: {}", session.getOrderId(), e.getMessage());
+            }
+
         } else {
             session.fail();
             log.error("Xác thực giao dịch thất bại cho Session: {}", sessionId);
