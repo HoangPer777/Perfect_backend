@@ -4,11 +4,14 @@ import com.perfectmarket.modules.auth.UserPrincipal;
 import com.perfectmarket.modules.product.dto.request.CreateProductRequest;
 import com.perfectmarket.modules.product.dto.response.*;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
@@ -76,6 +79,11 @@ public class ProductController {
         return ResponseEntity.ok(productService.findAllLeafCategories());
     }
 
+    @GetMapping("/root-categories")
+    public ResponseEntity<List<CategoryResponse>> getAllRootCategories() {
+        return ResponseEntity.ok(productService.findAllRootCategories());
+    }
+
     @GetMapping("/my-products")
     @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_DESIGNER')")
     public ResponseEntity<List<SnapshotProductResponse>> getMyProducts(Authentication authentication) {
@@ -84,4 +92,13 @@ public class ProductController {
         return ResponseEntity.ok(productService.getProductsByDesignerId(userId));
     }
     // TODO: Like/Comment on Product
+
+    @GetMapping("/category-filtered")
+    public ResponseEntity<Page<CardProductResponse>> getFilteredProducts(@RequestParam(required = false) String categoryIdStr,
+                                                                         @RequestParam(required = false, defaultValue = "0") BigDecimal minPrice,
+                                                                         @RequestParam(required = false, defaultValue = "9999999999999999") BigDecimal maxPrice,
+                                                                         @RequestParam(required = false) String sortBy,
+                                                                         Pageable pageable) {
+        return ResponseEntity.ok(productService.getFilteredProducts(categoryIdStr, minPrice, maxPrice, sortBy, pageable));
+    }
 }
