@@ -41,6 +41,9 @@ public class AuthServiceTest {
     @Mock
     private EmailService emailService;
 
+    @Mock
+    private EmailVerificationTokenRepository emailVerificationTokenRepository;
+
     @InjectMocks
     private AuthService authService;
 
@@ -73,14 +76,16 @@ public class AuthServiceTest {
         when(roleRepository.findByName("ROLE_CUSTOMER")).thenReturn(Optional.of(customerRole));
         when(passwordEncoder.encode("password")).thenReturn("hashed_password");
         when(userRepository.save(any(User.class))).thenReturn(sampleUser);
-        when(jwtUtil.generateToken("test@example.com")).thenReturn("mocked_jwt_token");
+        when(emailVerificationTokenRepository.save(any(EmailVerificationToken.class))).thenReturn(null);
 
         AuthResponse response = authService.register(req);
 
         assertNotNull(response);
-        assertEquals("mocked_jwt_token", response.accessToken());
+        assertEquals("", response.accessToken());
         assertEquals("test@example.com", response.user().email());
         verify(userRepository, times(1)).save(any(User.class));
+        verify(emailVerificationTokenRepository, times(1)).save(any(EmailVerificationToken.class));
+        verify(emailService, times(1)).sendVerificationEmail(eq("test@example.com"), anyString());
     }
 
     @Test
@@ -98,6 +103,7 @@ public class AuthServiceTest {
     @Test
     public void testLogin_Success() {
         LoginRequest req = new LoginRequest("test@example.com", "password");
+        sampleUser.setVerified(true);
         
         when(userRepository.findByEmail("test@example.com")).thenReturn(Optional.of(sampleUser));
         when(passwordEncoder.matches("password", "hashed_password")).thenReturn(true);
@@ -113,6 +119,7 @@ public class AuthServiceTest {
     @Test
     public void testLogin_InvalidPassword() {
         LoginRequest req = new LoginRequest("test@example.com", "wrong_password");
+        sampleUser.setVerified(true);
         
         when(userRepository.findByEmail("test@example.com")).thenReturn(Optional.of(sampleUser));
         when(passwordEncoder.matches("wrong_password", "hashed_password")).thenReturn(false);

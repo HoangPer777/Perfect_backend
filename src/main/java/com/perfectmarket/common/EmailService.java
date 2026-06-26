@@ -23,18 +23,14 @@ public class EmailService {
     @Value("${spring.mail.password:}")
     private String mailPassword;
 
-    public void sendPasswordResetEmail(String toEmail, String token) {
-        String resetLink = frontendUrl + "/reset-password?token=" + token;
-
-        // Always log for dev/testing — copy link từ console backend
-        log.info("=== PASSWORD RESET LINK ===");
+    public void sendPasswordResetEmail(String toEmail, String code) {
+        log.info("=== PASSWORD RESET CODE ===");
         log.info("To: {}", toEmail);
-        log.info("Link: {}", resetLink);
+        log.info("Code: {}", code);
         log.info("===========================");
 
-        // Chỉ gửi email thật nếu MAIL_PASSWORD đã được cấu hình
         if (mailPassword == null || mailPassword.isBlank()) {
-            log.info("MAIL_PASSWORD not set — dùng link ở trên để test.");
+            log.info("MAIL_PASSWORD not set — dùng code ở trên để test.");
             return;
         }
 
@@ -46,18 +42,54 @@ public class EmailService {
             msg.setText("""
                 Hi,
 
-                You requested a password reset. Click the link below (valid 30 minutes):
+                You requested a password reset. Your password reset verification code is:
 
                 %s
 
-                If you didn't request this, ignore this email.
+                This code is valid for 30 minutes. If you didn't request this, ignore this email.
 
                 — Perfect Market Team
-                """.formatted(resetLink));
+                """.formatted(code));
             mailSender.send(msg);
             log.info("Reset email sent to {}", toEmail);
         } catch (Exception e) {
             log.warn("Failed to send reset email to {}: {}", toEmail, e.getMessage());
+        }
+    }
+
+    public void sendVerificationEmail(String toEmail, String code) {
+        log.info("=== EMAIL VERIFICATION CODE ===");
+        log.info("To: {}", toEmail);
+        log.info("Code: {}", code);
+        log.info("===============================");
+
+        if (mailPassword == null || mailPassword.isBlank()) {
+            log.info("MAIL_PASSWORD not set — dùng code ở trên để test.");
+            return;
+        }
+
+        try {
+            SimpleMailMessage msg = new SimpleMailMessage();
+            msg.setFrom(fromEmail);
+            msg.setTo(toEmail);
+            msg.setSubject("Perfect Market — Verify your email");
+            msg.setText("""
+                Hi,
+
+                Welcome to Perfect Market! Your account verification code is:
+
+                %s
+
+                Please enter this code on the website to activate your account.
+
+                If you didn't register on our website, ignore this email.
+
+                — Perfect Market Team
+                """.formatted(code));
+            mailSender.send(msg);
+            log.info("Verification email sent to {}", toEmail);
+        } catch (Exception e) {
+            log.warn("Failed to send verification email to {}: {}", toEmail, e.getMessage());
         }
     }
 }
