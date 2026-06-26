@@ -2,6 +2,7 @@ package com.perfectmarket.modules.product;
 
 import com.perfectmarket.modules.product.dto.response.DesignerProjection;
 import com.perfectmarket.modules.product.dto.response.SnapshotProductResponse;
+import org.springframework.data.domain.Page;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -9,6 +10,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.repository.query.Param;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
@@ -60,4 +62,52 @@ public interface ProductRepository extends JpaRepository<Product, UUID> {
     ORDER BY SUM(p.soldCount) DESC
     """)
     List<DesignerProjection> getHottestDesigner(String status, Pageable pageable);
+
+    // 1. Sắp xếp theo Giá tăng dần (Low to High)
+    @Query("SELECT p FROM Product p LEFT JOIN p.packages sp WHERE p.isActive = true AND p.status = 'PUBLISHED' " +
+            "AND (:categoryIds IS NULL OR EXISTS (SELECT 1 FROM p.categories c WHERE c.id IN :categoryIds)) " +
+            "GROUP BY p.id HAVING COALESCE(MIN(sp.price), 0) BETWEEN :minPrice AND :maxPrice " +
+            "ORDER BY MIN(sp.price) ASC")
+    Page<Product> searchProductsOrderByPriceAsc(
+            @Param("categoryIds") List<UUID> categoryIds,
+            @Param("minPrice") BigDecimal minPrice,
+            @Param("maxPrice") BigDecimal maxPrice,
+            Pageable pageable
+    );
+
+    // 2. Sắp xếp theo Giá giảm dần (High to Low)
+    @Query("SELECT p FROM Product p LEFT JOIN p.packages sp WHERE p.isActive = true AND p.status = 'PUBLISHED' " +
+            "AND (:categoryIds IS NULL OR EXISTS (SELECT 1 FROM p.categories c WHERE c.id IN :categoryIds)) " +
+            "GROUP BY p.id HAVING COALESCE(MIN(sp.price), 0) BETWEEN :minPrice AND :maxPrice " +
+            "ORDER BY MIN(sp.price) DESC")
+    Page<Product> searchProductsOrderByPriceDesc(
+            @Param("categoryIds") List<UUID> categoryIds,
+            @Param("minPrice") BigDecimal minPrice,
+            @Param("maxPrice") BigDecimal maxPrice,
+            Pageable pageable
+    );
+
+    // 3. Sắp xếp theo Số lượng đã bán (Best Seller)
+    @Query("SELECT p FROM Product p LEFT JOIN p.packages sp WHERE p.isActive = true AND p.status = 'PUBLISHED' " +
+            "AND (:categoryIds IS NULL OR EXISTS (SELECT 1 FROM p.categories c WHERE c.id IN :categoryIds)) " +
+            "GROUP BY p.id HAVING COALESCE(MIN(sp.price), 0) BETWEEN :minPrice AND :maxPrice " +
+            "ORDER BY p.soldCount DESC")
+    Page<Product> searchProductsOrderBySoldCountDesc(
+            @Param("categoryIds") List<UUID> categoryIds,
+            @Param("minPrice") BigDecimal minPrice,
+            @Param("maxPrice") BigDecimal maxPrice,
+            Pageable pageable
+    );
+
+    // 4. Mặc định / Recommended (Ngày tạo mới nhất)
+    @Query("SELECT p FROM Product p LEFT JOIN p.packages sp WHERE p.isActive = true AND p.status = 'PUBLISHED' " +
+            "AND (:categoryIds IS NULL OR EXISTS (SELECT 1 FROM p.categories c WHERE c.id IN :categoryIds)) " +
+            "GROUP BY p.id HAVING COALESCE(MIN(sp.price), 0) BETWEEN :minPrice AND :maxPrice " +
+            "ORDER BY p.createdAt DESC")
+    Page<Product> searchProductsDefault(
+            @Param("categoryIds") List<UUID> categoryIds,
+            @Param("minPrice") BigDecimal minPrice,
+            @Param("maxPrice") BigDecimal maxPrice,
+            Pageable pageable
+    );
 }

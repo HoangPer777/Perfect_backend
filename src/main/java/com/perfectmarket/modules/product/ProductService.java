@@ -6,12 +6,14 @@ import com.perfectmarket.modules.product.dto.request.CreateProductRequest;
 import com.perfectmarket.modules.product.dto.response.*;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.PageRequest;
 
+import java.math.BigDecimal;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -221,6 +223,46 @@ public class ProductService {
     @Transactional(readOnly = true)
     public List<SnapshotProductResponse> getProductsByDesignerId(UUID designerId) {
         return productRepository.getProductByDesignerId(designerId);
+    }
+
+    public List<CategoryResponse> findAllRootCategories() {
+        return categoryRepository.findAllRootCategories().stream().map(c -> new CategoryResponse(c.getId(), c.getName(), c.getIcon(), c.getSlug())).toList();
+    }
+
+    @Transactional(readOnly = true)
+    public Page<CardProductResponse> getFilteredProducts(String categoryIdStr, BigDecimal minPrice, BigDecimal maxPrice, String sortBy, Pageable pageable) {
+
+        List<UUID> categoryIds = null;
+
+        if (categoryIdStr != null && !categoryIdStr.trim().isEmpty() && !categoryIdStr.equalsIgnoreCase("All")) {
+            try {
+                UUID categoryId = UUID.fromString(categoryIdStr.trim());
+                categoryIds = new ArrayList<>(categoryRepository.findImmediateChildIds(categoryId));
+                categoryIds.add(categoryId);
+            } catch (Exception e) {
+                throw new EntityNotFoundException();
+            }
+        }
+
+        Page<Product> result;
+        String sortKey = (sortBy != null) ? sortBy.toLowerCase().trim() : "";
+
+        switch (sortKey) {
+            case "price-asc":
+                result = productRepository.searchProductsOrderByPriceAsc(categoryIds, minPrice, maxPrice, pageable);
+                break;
+            case "price-desc":
+                result = productRepository.searchProductsOrderByPriceDesc(categoryIds, minPrice, maxPrice, pageable);
+                break;
+            case "best-seller":
+                result = productRepository.searchProductsOrderBySoldCountDesc(categoryIds, minPrice, maxPrice, pageable);
+                break;
+            default:
+                result = productRepository.searchProductsDefault(categoryIds, minPrice, maxPrice, pageable);
+                break;
+        }
+
+        return result.map(this::mapToCardResponse);
     }
 
 }
