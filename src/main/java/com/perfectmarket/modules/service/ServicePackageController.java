@@ -19,6 +19,11 @@ import java.util.UUID;
 public class ServicePackageController {
     private final ServicePackageService servicePackageService;
 
+    @GetMapping
+    public ResponseEntity<List<ServicePackageResponse>> getAllActivePackages() {
+        return ResponseEntity.ok(servicePackageService.getAllActivePackages());
+    }
+
     @GetMapping("/get")
     public ResponseEntity<List<ServicePackageResponse>> getServicePackageByProductId(@RequestParam UUID productId) {
         return ResponseEntity.ok(servicePackageService.getServicePackagesByProductId(productId));
@@ -28,6 +33,12 @@ public class ServicePackageController {
     public ResponseEntity<List<ServicePackageResponse>> getMyPackages(@PathVariable UUID productId, Authentication authentication) {
         UserPrincipal principal = (UserPrincipal) authentication.getPrincipal();
         return ResponseEntity.ok(servicePackageService.getMyPackages(productId, principal.id()));
+    }
+
+    @GetMapping("/my-packages")
+    public ResponseEntity<List<ServicePackageResponse>> getMyPackages(Authentication authentication) {
+        UserPrincipal principal = (UserPrincipal) authentication.getPrincipal();
+        return ResponseEntity.ok(servicePackageService.getDesignerPackages(principal.id()));
     }
 
     @PostMapping("/create")

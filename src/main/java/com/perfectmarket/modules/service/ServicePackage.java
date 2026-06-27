@@ -36,7 +36,7 @@ public class ServicePackage {
     private String status;
 
     public enum PackageType {
-        BASIC, PRO, VIP, CUSTOM
+        BASIC, MEDIUM, PREMIUM, PRO_MAX, PRO, VIP, CUSTOM
     }
 
     // TODO: Add package features list (e.g., source file included, high res)
