@@ -93,12 +93,13 @@ public class ProductController {
     }
     // TODO: Like/Comment on Product
 
-    @GetMapping("/category-filtered")
-    public ResponseEntity<Page<CardProductResponse>> getFilteredProducts(@RequestParam(required = false) String categoryIdStr,
+    @GetMapping("/search-filtered")
+    public ResponseEntity<Page<CardProductResponse>> getFilteredProducts(@RequestParam(required = false, defaultValue = "") String keyword,
+                                                                         @RequestParam(required = false) String categoryIdStr,
                                                                          @RequestParam(required = false, defaultValue = "0") BigDecimal minPrice,
                                                                          @RequestParam(required = false, defaultValue = "9999999999999999") BigDecimal maxPrice,
                                                                          @RequestParam(required = false) String sortBy,
                                                                          Pageable pageable) {
-        return ResponseEntity.ok(productService.getFilteredProducts(categoryIdStr, minPrice, maxPrice, sortBy, pageable));
+        return ResponseEntity.ok(productService.getFilteredProducts(keyword, categoryIdStr, minPrice, maxPrice, sortBy, pageable));
     }
 }

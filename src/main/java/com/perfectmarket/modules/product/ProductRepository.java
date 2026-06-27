@@ -64,11 +64,35 @@ public interface ProductRepository extends JpaRepository<Product, UUID> {
     List<DesignerProjection> getHottestDesigner(String status, Pageable pageable);
 
     // 1. Sắp xếp theo Giá tăng dần (Low to High)
-    @Query("SELECT p FROM Product p LEFT JOIN p.packages sp WHERE p.isActive = true AND p.status = 'PUBLISHED' " +
-            "AND (:categoryIds IS NULL OR EXISTS (SELECT 1 FROM p.categories c WHERE c.id IN :categoryIds)) " +
-            "GROUP BY p.id HAVING COALESCE(MIN(sp.price), 0) BETWEEN :minPrice AND :maxPrice " +
-            "ORDER BY MIN(sp.price) ASC")
+    @Query(
+            value = """
+            SELECT p FROM Product p 
+            LEFT JOIN p.designer d 
+            LEFT JOIN p.packages sp 
+            WHERE p.isActive = true AND p.status = 'PUBLISHED' 
+            AND (d.username ILIKE CONCAT('%', :keyword, '%') OR p.title ILIKE CONCAT('%', :keyword, '%'))
+            AND (:categoryIds IS NULL OR EXISTS (SELECT 1 FROM p.categories c WHERE c.id IN :categoryIds)) 
+            AND (p.packages IS EMPTY OR EXISTS (
+                SELECT 1 FROM p.packages filterSp 
+                WHERE filterSp.price BETWEEN :minPrice AND :maxPrice
+            ))
+            GROUP BY p.id 
+            ORDER BY COALESCE(MIN(CASE WHEN sp.price BETWEEN :minPrice AND :maxPrice THEN sp.price END), CAST(0 AS BigDecimal)) ASC
+        """,
+            countQuery = """
+            SELECT COUNT(DISTINCT p.id) FROM Product p 
+            LEFT JOIN p.designer d 
+            WHERE p.isActive = true AND p.status = 'PUBLISHED' 
+            AND (d.username ILIKE CONCAT('%', :keyword, '%') OR p.title ILIKE CONCAT('%', :keyword, '%'))
+            AND (:categoryIds IS NULL OR EXISTS (SELECT 1 FROM p.categories c WHERE c.id IN :categoryIds)) 
+            AND (p.packages IS EMPTY OR EXISTS (
+                SELECT 1 FROM p.packages filterSp 
+                WHERE filterSp.price BETWEEN :minPrice AND :maxPrice
+            ))
+        """
+    )
     Page<Product> searchProductsOrderByPriceAsc(
+            @Param("keyword") String keyword,
             @Param("categoryIds") List<UUID> categoryIds,
             @Param("minPrice") BigDecimal minPrice,
             @Param("maxPrice") BigDecimal maxPrice,
@@ -76,11 +100,35 @@ public interface ProductRepository extends JpaRepository<Product, UUID> {
     );
 
     // 2. Sắp xếp theo Giá giảm dần (High to Low)
-    @Query("SELECT p FROM Product p LEFT JOIN p.packages sp WHERE p.isActive = true AND p.status = 'PUBLISHED' " +
-            "AND (:categoryIds IS NULL OR EXISTS (SELECT 1 FROM p.categories c WHERE c.id IN :categoryIds)) " +
-            "GROUP BY p.id HAVING COALESCE(MIN(sp.price), 0) BETWEEN :minPrice AND :maxPrice " +
-            "ORDER BY MIN(sp.price) DESC")
+    @Query(
+            value = """
+            SELECT p FROM Product p 
+            LEFT JOIN p.designer d 
+            LEFT JOIN p.packages sp 
+            WHERE p.isActive = true AND p.status = 'PUBLISHED' 
+            AND (d.username ILIKE CONCAT('%', :keyword, '%') OR p.title ILIKE CONCAT('%', :keyword, '%'))
+            AND (:categoryIds IS NULL OR EXISTS (SELECT 1 FROM p.categories c WHERE c.id IN :categoryIds)) 
+            AND (p.packages IS EMPTY OR EXISTS (
+                SELECT 1 FROM p.packages filterSp 
+                WHERE filterSp.price BETWEEN :minPrice AND :maxPrice
+            ))
+            GROUP BY p.id 
+            ORDER BY COALESCE(MAX(CASE WHEN sp.price BETWEEN :minPrice AND :maxPrice THEN sp.price END), CAST(0 AS BigDecimal)) DESC
+        """,
+            countQuery = """
+            SELECT COUNT(DISTINCT p.id) FROM Product p 
+            LEFT JOIN p.designer d 
+            WHERE p.isActive = true AND p.status = 'PUBLISHED' 
+            AND (d.username ILIKE CONCAT('%', :keyword, '%') OR p.title ILIKE CONCAT('%', :keyword, '%'))
+            AND (:categoryIds IS NULL OR EXISTS (SELECT 1 FROM p.categories c WHERE c.id IN :categoryIds)) 
+            AND (p.packages IS EMPTY OR EXISTS (
+                SELECT 1 FROM p.packages filterSp 
+                WHERE filterSp.price BETWEEN :minPrice AND :maxPrice
+            ))
+        """
+    )
     Page<Product> searchProductsOrderByPriceDesc(
+            @Param("keyword") String keyword,
             @Param("categoryIds") List<UUID> categoryIds,
             @Param("minPrice") BigDecimal minPrice,
             @Param("maxPrice") BigDecimal maxPrice,
@@ -88,11 +136,33 @@ public interface ProductRepository extends JpaRepository<Product, UUID> {
     );
 
     // 3. Sắp xếp theo Số lượng đã bán (Best Seller)
-    @Query("SELECT p FROM Product p LEFT JOIN p.packages sp WHERE p.isActive = true AND p.status = 'PUBLISHED' " +
-            "AND (:categoryIds IS NULL OR EXISTS (SELECT 1 FROM p.categories c WHERE c.id IN :categoryIds)) " +
-            "GROUP BY p.id HAVING COALESCE(MIN(sp.price), 0) BETWEEN :minPrice AND :maxPrice " +
-            "ORDER BY p.soldCount DESC")
+    @Query(
+            value = """
+            SELECT p FROM Product p 
+            LEFT JOIN p.designer d 
+            WHERE p.isActive = true AND p.status = 'PUBLISHED' 
+            AND (d.username ILIKE CONCAT('%', :keyword, '%') OR p.title ILIKE CONCAT('%', :keyword, '%'))
+            AND (:categoryIds IS NULL OR EXISTS (SELECT 1 FROM p.categories c WHERE c.id IN :categoryIds)) 
+            AND (p.packages IS EMPTY OR EXISTS (
+                SELECT 1 FROM p.packages filterSp 
+                WHERE filterSp.price BETWEEN :minPrice AND :maxPrice
+            ))
+            ORDER BY p.soldCount DESC
+        """,
+            countQuery = """
+            SELECT COUNT(p) FROM Product p 
+            LEFT JOIN p.designer d 
+            WHERE p.isActive = true AND p.status = 'PUBLISHED' 
+            AND (d.username ILIKE CONCAT('%', :keyword, '%') OR p.title ILIKE CONCAT('%', :keyword, '%'))
+            AND (:categoryIds IS NULL OR EXISTS (SELECT 1 FROM p.categories c WHERE c.id IN :categoryIds)) 
+            AND (p.packages IS EMPTY OR EXISTS (
+                SELECT 1 FROM p.packages filterSp 
+                WHERE filterSp.price BETWEEN :minPrice AND :maxPrice
+            ))
+        """
+    )
     Page<Product> searchProductsOrderBySoldCountDesc(
+            @Param("keyword") String keyword,
             @Param("categoryIds") List<UUID> categoryIds,
             @Param("minPrice") BigDecimal minPrice,
             @Param("maxPrice") BigDecimal maxPrice,
@@ -100,11 +170,33 @@ public interface ProductRepository extends JpaRepository<Product, UUID> {
     );
 
     // 4. Mặc định / Recommended (Ngày tạo mới nhất)
-    @Query("SELECT p FROM Product p LEFT JOIN p.packages sp WHERE p.isActive = true AND p.status = 'PUBLISHED' " +
-            "AND (:categoryIds IS NULL OR EXISTS (SELECT 1 FROM p.categories c WHERE c.id IN :categoryIds)) " +
-            "GROUP BY p.id HAVING COALESCE(MIN(sp.price), 0) BETWEEN :minPrice AND :maxPrice " +
-            "ORDER BY p.createdAt DESC")
+    @Query(
+            value = """
+            SELECT p FROM Product p 
+            LEFT JOIN p.designer d 
+            WHERE p.isActive = true AND p.status = 'PUBLISHED' 
+            AND (d.username ILIKE CONCAT('%', :keyword, '%') OR p.title ILIKE CONCAT('%', :keyword, '%'))
+            AND (:categoryIds IS NULL OR EXISTS (SELECT 1 FROM p.categories c WHERE c.id IN :categoryIds)) 
+            AND (p.packages IS EMPTY OR EXISTS (
+                SELECT 1 FROM p.packages filterSp 
+                WHERE filterSp.price BETWEEN :minPrice AND :maxPrice
+            ))
+            ORDER BY p.createdAt DESC
+        """,
+            countQuery = """
+            SELECT COUNT(p) FROM Product p 
+            LEFT JOIN p.designer d 
+            WHERE p.isActive = true AND p.status = 'PUBLISHED' 
+            AND (d.username ILIKE CONCAT('%', :keyword, '%') OR p.title ILIKE CONCAT('%', :keyword, '%'))
+            AND (:categoryIds IS NULL OR EXISTS (SELECT 1 FROM p.categories c WHERE c.id IN :categoryIds)) 
+            AND (p.packages IS EMPTY OR EXISTS (
+                SELECT 1 FROM p.packages filterSp 
+                WHERE filterSp.price BETWEEN :minPrice AND :maxPrice
+            ))
+        """
+    )
     Page<Product> searchProductsDefault(
+            @Param("keyword") String keyword,
             @Param("categoryIds") List<UUID> categoryIds,
             @Param("minPrice") BigDecimal minPrice,
             @Param("maxPrice") BigDecimal maxPrice,

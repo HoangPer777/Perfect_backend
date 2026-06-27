@@ -230,7 +230,7 @@ public class ProductService {
     }
 
     @Transactional(readOnly = true)
-    public Page<CardProductResponse> getFilteredProducts(String categoryIdStr, BigDecimal minPrice, BigDecimal maxPrice, String sortBy, Pageable pageable) {
+    public Page<CardProductResponse> getFilteredProducts(String keyword, String categoryIdStr, BigDecimal minPrice, BigDecimal maxPrice, String sortBy, Pageable pageable) {
 
         List<UUID> categoryIds = null;
 
@@ -249,20 +249,19 @@ public class ProductService {
 
         switch (sortKey) {
             case "price-asc":
-                result = productRepository.searchProductsOrderByPriceAsc(categoryIds, minPrice, maxPrice, pageable);
+                result = productRepository.searchProductsOrderByPriceAsc(keyword, categoryIds, minPrice, maxPrice, pageable);
                 break;
             case "price-desc":
-                result = productRepository.searchProductsOrderByPriceDesc(categoryIds, minPrice, maxPrice, pageable);
+                result = productRepository.searchProductsOrderByPriceDesc(keyword, categoryIds, minPrice, maxPrice, pageable);
                 break;
             case "best-seller":
-                result = productRepository.searchProductsOrderBySoldCountDesc(categoryIds, minPrice, maxPrice, pageable);
+                result = productRepository.searchProductsOrderBySoldCountDesc(keyword, categoryIds, minPrice, maxPrice, pageable);
                 break;
             default:
-                result = productRepository.searchProductsDefault(categoryIds, minPrice, maxPrice, pageable);
+                result = productRepository.searchProductsDefault(keyword, categoryIds, minPrice, maxPrice, pageable);
                 break;
         }
 
         return result.map(this::mapToCardResponse);
     }
-
 }
