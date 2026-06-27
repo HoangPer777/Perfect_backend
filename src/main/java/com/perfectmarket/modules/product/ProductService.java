@@ -37,7 +37,7 @@ public class ProductService {
                 .categories(categories)
                 .title(request.title())
                 .description(request.description())
-                //.price(request.price())
+                .price(request.price())
                 .thumbnailUrl(request.thumbnailUrl())
                 .status(request.status())
                 .build();
@@ -63,6 +63,7 @@ public class ProductService {
 
         product.setTitle(request.title());
         product.setDescription(request.description());
+        product.setPrice(request.price());
         product.setThumbnailUrl(request.thumbnailUrl());
         product.setStatus(request.status());
 
