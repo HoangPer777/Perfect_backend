@@ -1,18 +1,21 @@
 package com.perfectmarket.modules.product;
 
+import com.perfectmarket.modules.auth.User;
 import com.perfectmarket.modules.auth.UserRepository;
 import com.perfectmarket.modules.product.dto.request.CreateProductRequest;
 import com.perfectmarket.modules.product.dto.response.*;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.PageRequest;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+
+import java.math.BigDecimal;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -23,18 +26,18 @@ public class ProductService {
     private final CategoryRepository categoryRepository;
 
     @Transactional
-    public CreateProductResponse createProduct(CreateProductRequest request) {
-        //User user = userRepository.getReferenceById(userId);
+    public CreateProductResponse createProduct(UUID userId, CreateProductRequest request) {
+        User user = userRepository.getReferenceById(userId);
         List<Category> categories = request.categories().stream()
                 .map(categoryRepository::getReferenceById)
                 .toList();
 
         Product product = Product.builder()
-                //.designer(user)
+                .designer(user)
                 .categories(categories)
                 .title(request.title())
                 .description(request.description())
-                //.price(request.price())
+                .price(request.price())
                 .thumbnailUrl(request.thumbnailUrl())
                 .status(request.status())
                 .build();
@@ -49,6 +52,71 @@ public class ProductService {
         Product savedProduct = productRepository.save(product);
 
         return mapperProductToResponse(savedProduct);
+    }
+
+    @Transactional
+    public CreateProductResponse updateProduct(UUID userId, CreateProductRequest request) {
+        Product product = productRepository.findByIdAndIsActiveAndDesigner_Id(request.id(), true, userId);
+        if(product == null) {
+            throw new EntityNotFoundException("Product not found");
+        }
+
+        product.setTitle(request.title());
+        product.setDescription(request.description());
+        product.setPrice(request.price());
+        product.setThumbnailUrl(request.thumbnailUrl());
+        product.setStatus(request.status());
+
+        List<ProductImage> currentImages = product.getImages();
+        if (currentImages == null) {
+            currentImages = new ArrayList<>();
+        }
+
+        Map<String, ProductImage> existingImagesMap = currentImages.stream()
+                .collect(Collectors.toMap(ProductImage::getUrl, image -> image, (existing, replacement) -> existing));
+
+        List<ProductImage> updatedImages = new ArrayList<>();
+
+        for (String url : request.images()) {
+            if (existingImagesMap.containsKey(url)) {
+                updatedImages.add(existingImagesMap.get(url));
+            } else {
+                ProductImage newImage = new ProductImage();
+                newImage.setUrl(url);
+                newImage.setProduct(product);
+                updatedImages.add(newImage);
+            }
+        }
+
+        product.setImages(updatedImages);
+
+        List<Category> categories = request.categories().stream()
+                .map(categoryRepository::getReferenceById)
+                .collect(Collectors.toList());
+        product.setCategories(categories);
+
+        Product savedProduct = productRepository.save(product);
+        return mapperProductToResponse(savedProduct);
+    }
+
+    public Boolean deleteProduct(UUID productId, UUID userId) {
+        Product product = productRepository.findByIdAndIsActiveAndDesigner_Id(productId, true, userId);
+        if (product == null) {
+            throw new EntityNotFoundException("Product not found");
+        }
+
+        product.setActive(false);
+        productRepository.save(product);
+        return true;
+    }
+
+    public CreateProductResponse getProductByDesigner(UUID userId, UUID productId) {
+        Product product = productRepository.findByIdAndIsActiveAndDesigner_Id(productId, true, userId);
+        if(product == null) {
+            throw new EntityNotFoundException("Product not found");
+        }
+
+        return mapperProductToResponse(product);
     }
 
     private CreateProductResponse mapperProductToResponse(Product product) {
@@ -81,9 +149,16 @@ public class ProductService {
         List<ProductDetailResponse.ImageResponse> images = Optional.ofNullable(product.getImages()).orElse(List.of())
                 .stream().map(i -> new ProductDetailResponse.ImageResponse(i.getId(), i.getUrl())).toList();
 
+        List<ProductDetailResponse.CategoryResponse> categories = Optional.ofNullable(product.getCategories())
+                .orElse(List.of())
+                .stream()
+                .map(c -> new ProductDetailResponse.CategoryResponse(c.getId(), c.getName()))
+                .toList();
+
+
         return new ProductDetailResponse(product.getId(), designer, product.getTitle(), product.getDescription(),
                 product.getPrice(), product.getThumbnailUrl(), product.getViewCount(), product.getSoldCount(),
-                product.getRatingAvg(), images, product.getCreatedAt(), product.getUpdatedAt());
+                product.getRatingAvg(), images, categories, product.getCreatedAt(), product.getUpdatedAt());
     }
 
     @Transactional(readOnly = true)
@@ -144,5 +219,50 @@ public class ProductService {
 
     public List<CategoryResponse> findAllLeafCategories() {
         return categoryRepository.findAllLeafCategories().stream().map(c -> new CategoryResponse(c.getId(), c.getName(), c.getIcon(), c.getSlug())).toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<SnapshotProductResponse> getProductsByDesignerId(UUID designerId) {
+        return productRepository.getProductByDesignerId(designerId);
+    }
+
+    public List<CategoryResponse> findAllRootCategories() {
+        return categoryRepository.findAllRootCategories().stream().map(c -> new CategoryResponse(c.getId(), c.getName(), c.getIcon(), c.getSlug())).toList();
+    }
+
+    @Transactional(readOnly = true)
+    public Page<CardProductResponse> getFilteredProducts(String keyword, String categoryIdStr, BigDecimal minPrice, BigDecimal maxPrice, String sortBy, Pageable pageable) {
+
+        List<UUID> categoryIds = null;
+
+        if (categoryIdStr != null && !categoryIdStr.trim().isEmpty() && !categoryIdStr.equalsIgnoreCase("All")) {
+            try {
+                UUID categoryId = UUID.fromString(categoryIdStr.trim());
+                categoryIds = new ArrayList<>(categoryRepository.findImmediateChildIds(categoryId));
+                categoryIds.add(categoryId);
+            } catch (Exception e) {
+                throw new EntityNotFoundException();
+            }
+        }
+
+        Page<Product> result;
+        String sortKey = (sortBy != null) ? sortBy.toLowerCase().trim() : "";
+
+        switch (sortKey) {
+            case "price-asc":
+                result = productRepository.searchProductsOrderByPriceAsc(keyword, categoryIds, minPrice, maxPrice, pageable);
+                break;
+            case "price-desc":
+                result = productRepository.searchProductsOrderByPriceDesc(keyword, categoryIds, minPrice, maxPrice, pageable);
+                break;
+            case "best-seller":
+                result = productRepository.searchProductsOrderBySoldCountDesc(keyword, categoryIds, minPrice, maxPrice, pageable);
+                break;
+            default:
+                result = productRepository.searchProductsDefault(keyword, categoryIds, minPrice, maxPrice, pageable);
+                break;
+        }
+
+        return result.map(this::mapToCardResponse);
     }
 }

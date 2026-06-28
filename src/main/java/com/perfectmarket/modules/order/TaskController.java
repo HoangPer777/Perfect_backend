@@ -1,10 +1,20 @@
 package com.perfectmarket.modules.order;
 
+import com.perfectmarket.modules.auth.UserPrincipal;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/tasks")
+@RequiredArgsConstructor
 public class TaskController {
+    private final TaskService taskService;
 
     // TODO: Create Task from Service Package Purchase
     @PostMapping
@@ -24,4 +34,19 @@ public class TaskController {
     }
 
     // TODO: Download brief/documents (S3 integration)
+
+    @GetMapping("/designer/chart")
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_DESIGNER')")
+    public ResponseEntity<Map<String, Object>> getDesignerChart(@AuthenticationPrincipal UserPrincipal principal) {
+        UUID userId = principal.id();
+        return ResponseEntity.ok(taskService.getFullDashboardAnalytics(userId));
+    }
+
+    @GetMapping("/customer")
+    public ResponseEntity<java.util.List<Task>> getCustomerTasks(@AuthenticationPrincipal UserPrincipal principal) {
+        if (principal == null) {
+            return ResponseEntity.status(org.springframework.http.HttpStatus.UNAUTHORIZED).build();
+        }
+        return ResponseEntity.ok(taskService.getTasksForUser(principal.id()));
+    }
 }

@@ -23,7 +23,7 @@ public class CloudinaryConfig {
     @Component
     @Getter
     @Setter
-    @ConfigurationProperties(prefix = "cloudinary")
+    @ConfigurationProperties(prefix = "storage.cloudinary")
     public static class CloudinaryProperties {
         private String cloudName;
         private String apiKey;

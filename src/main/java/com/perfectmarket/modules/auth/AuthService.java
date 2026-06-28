@@ -21,6 +21,7 @@ public class AuthService {
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final PasswordResetTokenRepository resetTokenRepository;
+    private final EmailVerificationTokenRepository emailVerificationTokenRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
     private final EmailService emailService;
@@ -54,8 +55,19 @@ public class AuthService {
                 .build();
 
         userRepository.save(user);
-        String token = jwtUtil.generateToken(user.getEmail());
-        return AuthResponse.of(token, user);
+
+        // Generate email verification OTP
+        String otp = String.format("%06d", new java.util.Random().nextInt(1000000));
+        EmailVerificationToken evt = EmailVerificationToken.builder()
+                .user(user)
+                .token(otp)
+                .expiresAt(Instant.now().plus(24, ChronoUnit.HOURS))
+                .build();
+        emailVerificationTokenRepository.save(evt);
+
+        emailService.sendVerificationEmail(user.getEmail(), otp);
+
+        return AuthResponse.of("", user);
     }
 
     // ─── Login ────────────────────────────────────────────────────────────────
@@ -78,6 +90,10 @@ public class AuthService {
             throw new IllegalStateException("Account is banned");
         }
 
+        if (!user.isVerified()) {
+            throw new IllegalStateException("Account is not verified. Please check your email to verify your account.");
+        }
+
         String token = jwtUtil.generateToken(user.getEmail());
         return AuthResponse.of(token, user);
     }
@@ -90,14 +106,14 @@ public class AuthService {
             // Invalidate old tokens
             resetTokenRepository.deleteByUser(user);
 
-            String token = UUID.randomUUID().toString();
+            String otp = String.format("%06d", new java.util.Random().nextInt(1000000));
             PasswordResetToken prt = PasswordResetToken.builder()
                     .user(user)
-                    .token(token)
+                    .token(otp)
                     .expiresAt(Instant.now().plus(resetExpiryMinutes, ChronoUnit.MINUTES))
                     .build();
             resetTokenRepository.save(prt);
-            emailService.sendPasswordResetEmail(email, token);
+            emailService.sendPasswordResetEmail(email, otp);
         });
         // Always return success to prevent email enumeration
     }
@@ -121,6 +137,91 @@ public class AuthService {
         resetTokenRepository.save(prt);
     }
 
+    // ─── Email Verification ───────────────────────────────────────────────────
+
+    @Transactional
+    public void verifyEmail(String token) {
+        EmailVerificationToken evt = emailVerificationTokenRepository.findByToken(token)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid or expired verification token"));
+
+        if (evt.isUsed() || evt.isExpired()) {
+            throw new IllegalArgumentException("Verification token has expired or already been used");
+        }
+
+        User user = evt.getUser();
+        user.setVerified(true);
+        user.setStatus("ACTIVE");
+        userRepository.save(user);
+
+        evt.setUsed(true);
+        emailVerificationTokenRepository.save(evt);
+    }
+
+    @Transactional
+    public void resendVerificationEmail(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+        if (user.isVerified()) {
+            throw new IllegalArgumentException("Email is already verified");
+        }
+
+        emailVerificationTokenRepository.deleteByUser(user);
+
+        String otp = String.format("%06d", new java.util.Random().nextInt(1000000));
+        EmailVerificationToken evt = EmailVerificationToken.builder()
+                .user(user)
+                .token(otp)
+                .expiresAt(Instant.now().plus(24, ChronoUnit.HOURS))
+                .build();
+        emailVerificationTokenRepository.save(evt);
+
+        emailService.sendVerificationEmail(user.getEmail(), otp);
+    }
+
+    // ─── Update Profile ───────────────────────────────────────────────────────
+
+    @Transactional
+    public AuthResponse.UserInfo updateProfile(String email, UpdateProfileRequest req) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+        if (req.username() != null && !req.username().equals(user.getUsername())) {
+            if (userRepository.findByUsername(req.username()).isPresent()) {
+                throw new IllegalArgumentException("Username already in use");
+            }
+            user.setUsername(req.username());
+        }
+
+        user.setFullName(req.fullName());
+        if (req.avatarUrl() != null && !req.avatarUrl().isBlank()) {
+            user.setAvatarUrl(req.avatarUrl());
+        }
+        user.setCity(req.city());
+        user.setDetailedAddress(req.detailedAddress());
+        user.setEmailNotifications(req.emailNotifications());
+        user.setPromotionalOffers(req.promotionalOffers());
+
+        userRepository.save(user);
+
+        var roles = user.getRoles().stream()
+                .map(Role::getName)
+                .collect(java.util.stream.Collectors.toSet());
+
+        return new AuthResponse.UserInfo(
+                user.getId(), user.getEmail(), user.getFullName(),
+                user.getUsername(), user.getAvatarUrl(), roles,
+                user.getCity(), user.getDetailedAddress(),
+                user.isEmailNotifications(), user.isPromotionalOffers(),
+                user.getProvider(),
+                user.getSpecialization(),
+                user.getBio(),
+                user.getPortfolioUrl(),
+                user.getSkills(),
+                user.getExperienceYears()
+        );
+    }
+
     // ─── Get current user ─────────────────────────────────────────────────────
 
     public AuthResponse.UserInfo me(String email) {
@@ -131,7 +232,60 @@ public class AuthService {
                 .collect(java.util.stream.Collectors.toSet());
         return new AuthResponse.UserInfo(
                 user.getId(), user.getEmail(), user.getFullName(),
-                user.getUsername(), user.getAvatarUrl(), roles
+                user.getUsername(), user.getAvatarUrl(), roles,
+                user.getCity(), user.getDetailedAddress(),
+                user.isEmailNotifications(), user.isPromotionalOffers(),
+                user.getProvider(),
+                user.getSpecialization(),
+                user.getBio(),
+                user.getPortfolioUrl(),
+                user.getSkills(),
+                user.getExperienceYears()
         );
+    }
+
+    // ─── Change Password & Upgrade Role ───────────────────────────────────────
+
+    @Transactional
+    public void changePassword(String email, String oldPassword, String newPassword) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+        if (!"LOCAL".equals(user.getProvider())) {
+            throw new IllegalArgumentException("Social login accounts cannot change password.");
+        }
+
+        if (user.getPasswordHash() == null ||
+            !passwordEncoder.matches(oldPassword, user.getPasswordHash())) {
+            throw new IllegalArgumentException("Mật khẩu hiện tại không chính xác.");
+        }
+
+        user.setPasswordHash(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+    }
+
+    @Transactional
+    public void upgradeToDesigner(
+            String email,
+            String specialization,
+            String bio,
+            String portfolioUrl,
+            String skills,
+            Integer experienceYears
+    ) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+        Role designerRole = roleRepository.findByName("ROLE_DESIGNER")
+                .orElseThrow(() -> new RuntimeException("Role ROLE_DESIGNER not found"));
+
+        user.getRoles().clear();
+        user.getRoles().add(designerRole);
+        user.setSpecialization(specialization);
+        user.setBio(bio);
+        user.setPortfolioUrl(portfolioUrl);
+        user.setSkills(skills);
+        user.setExperienceYears(experienceYears != null ? experienceYears : 0);
+        userRepository.save(user);
     }
 }

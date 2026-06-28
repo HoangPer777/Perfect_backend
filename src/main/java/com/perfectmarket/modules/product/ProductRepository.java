@@ -1,11 +1,16 @@
 package com.perfectmarket.modules.product;
 
 import com.perfectmarket.modules.product.dto.response.DesignerProjection;
+import com.perfectmarket.modules.product.dto.response.SnapshotProductResponse;
+import org.springframework.data.domain.Page;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.repository.query.Param;
+
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
@@ -13,6 +18,27 @@ public interface ProductRepository extends JpaRepository<Product, UUID> {
     List<Product> findByDesignerId(UUID designerId);
     @EntityGraph(attributePaths = {"designer", "images"})
     Product findByIdAndIsActiveAndStatus(UUID id, boolean isActive, String status);
+
+    @EntityGraph(attributePaths = {"designer", "images"})
+    Product findByIdAndIsActiveAndDesigner_Id(UUID id, boolean isActive, UUID userId);
+
+    @EntityGraph(attributePaths = {"designer", "images", "categories"})
+    List<Product> findByDesigner_IdAndIsActiveOrderByCreatedAtDesc(UUID designerId, boolean isActive);
+
+    @Query(value = """
+    SELECT 
+        p.id as id, 
+        p.title as title, 
+        p.thumbnailUrl as thumbnailUrl, 
+        p.status as status, 
+        p.viewCount as viewCount, 
+        p.soldCount as soldCount, 
+        p.createdAt as createdAt 
+    FROM Product p 
+    WHERE p.designer.id = :designerId AND p.isActive = true
+    ORDER BY p.createdAt DESC
+""")
+    List<SnapshotProductResponse> getProductByDesignerId(@Param("designerId") UUID designerId);
 
     // TODO: Add complex search queries or integrate with Meilisearch
     @Query("SELECT p FROM Product p ORDER BY p.viewCount DESC LIMIT 10")
@@ -36,4 +62,144 @@ public interface ProductRepository extends JpaRepository<Product, UUID> {
     ORDER BY SUM(p.soldCount) DESC
     """)
     List<DesignerProjection> getHottestDesigner(String status, Pageable pageable);
+
+    // 1. Sắp xếp theo Giá tăng dần (Low to High)
+    @Query(
+            value = """
+            SELECT p FROM Product p 
+            LEFT JOIN p.designer d 
+            LEFT JOIN p.packages sp 
+            WHERE p.isActive = true AND p.status = 'PUBLISHED' 
+            AND (d.username ILIKE CONCAT('%', :keyword, '%') OR p.title ILIKE CONCAT('%', :keyword, '%'))
+            AND (:categoryIds IS NULL OR EXISTS (SELECT 1 FROM p.categories c WHERE c.id IN :categoryIds)) 
+            AND (p.packages IS EMPTY OR EXISTS (
+                SELECT 1 FROM p.packages filterSp 
+                WHERE filterSp.price BETWEEN :minPrice AND :maxPrice
+            ))
+            GROUP BY p.id 
+            ORDER BY COALESCE(MIN(CASE WHEN sp.price BETWEEN :minPrice AND :maxPrice THEN sp.price END), CAST(0 AS BigDecimal)) ASC
+        """,
+            countQuery = """
+            SELECT COUNT(DISTINCT p.id) FROM Product p 
+            LEFT JOIN p.designer d 
+            WHERE p.isActive = true AND p.status = 'PUBLISHED' 
+            AND (d.username ILIKE CONCAT('%', :keyword, '%') OR p.title ILIKE CONCAT('%', :keyword, '%'))
+            AND (:categoryIds IS NULL OR EXISTS (SELECT 1 FROM p.categories c WHERE c.id IN :categoryIds)) 
+            AND (p.packages IS EMPTY OR EXISTS (
+                SELECT 1 FROM p.packages filterSp 
+                WHERE filterSp.price BETWEEN :minPrice AND :maxPrice
+            ))
+        """
+    )
+    Page<Product> searchProductsOrderByPriceAsc(
+            @Param("keyword") String keyword,
+            @Param("categoryIds") List<UUID> categoryIds,
+            @Param("minPrice") BigDecimal minPrice,
+            @Param("maxPrice") BigDecimal maxPrice,
+            Pageable pageable
+    );
+
+    // 2. Sắp xếp theo Giá giảm dần (High to Low)
+    @Query(
+            value = """
+            SELECT p FROM Product p 
+            LEFT JOIN p.designer d 
+            LEFT JOIN p.packages sp 
+            WHERE p.isActive = true AND p.status = 'PUBLISHED' 
+            AND (d.username ILIKE CONCAT('%', :keyword, '%') OR p.title ILIKE CONCAT('%', :keyword, '%'))
+            AND (:categoryIds IS NULL OR EXISTS (SELECT 1 FROM p.categories c WHERE c.id IN :categoryIds)) 
+            AND (p.packages IS EMPTY OR EXISTS (
+                SELECT 1 FROM p.packages filterSp 
+                WHERE filterSp.price BETWEEN :minPrice AND :maxPrice
+            ))
+            GROUP BY p.id 
+            ORDER BY COALESCE(MAX(CASE WHEN sp.price BETWEEN :minPrice AND :maxPrice THEN sp.price END), CAST(0 AS BigDecimal)) DESC
+        """,
+            countQuery = """
+            SELECT COUNT(DISTINCT p.id) FROM Product p 
+            LEFT JOIN p.designer d 
+            WHERE p.isActive = true AND p.status = 'PUBLISHED' 
+            AND (d.username ILIKE CONCAT('%', :keyword, '%') OR p.title ILIKE CONCAT('%', :keyword, '%'))
+            AND (:categoryIds IS NULL OR EXISTS (SELECT 1 FROM p.categories c WHERE c.id IN :categoryIds)) 
+            AND (p.packages IS EMPTY OR EXISTS (
+                SELECT 1 FROM p.packages filterSp 
+                WHERE filterSp.price BETWEEN :minPrice AND :maxPrice
+            ))
+        """
+    )
+    Page<Product> searchProductsOrderByPriceDesc(
+            @Param("keyword") String keyword,
+            @Param("categoryIds") List<UUID> categoryIds,
+            @Param("minPrice") BigDecimal minPrice,
+            @Param("maxPrice") BigDecimal maxPrice,
+            Pageable pageable
+    );
+
+    // 3. Sắp xếp theo Số lượng đã bán (Best Seller)
+    @Query(
+            value = """
+            SELECT p FROM Product p 
+            LEFT JOIN p.designer d 
+            WHERE p.isActive = true AND p.status = 'PUBLISHED' 
+            AND (d.username ILIKE CONCAT('%', :keyword, '%') OR p.title ILIKE CONCAT('%', :keyword, '%'))
+            AND (:categoryIds IS NULL OR EXISTS (SELECT 1 FROM p.categories c WHERE c.id IN :categoryIds)) 
+            AND (p.packages IS EMPTY OR EXISTS (
+                SELECT 1 FROM p.packages filterSp 
+                WHERE filterSp.price BETWEEN :minPrice AND :maxPrice
+            ))
+            ORDER BY p.soldCount DESC
+        """,
+            countQuery = """
+            SELECT COUNT(p) FROM Product p 
+            LEFT JOIN p.designer d 
+            WHERE p.isActive = true AND p.status = 'PUBLISHED' 
+            AND (d.username ILIKE CONCAT('%', :keyword, '%') OR p.title ILIKE CONCAT('%', :keyword, '%'))
+            AND (:categoryIds IS NULL OR EXISTS (SELECT 1 FROM p.categories c WHERE c.id IN :categoryIds)) 
+            AND (p.packages IS EMPTY OR EXISTS (
+                SELECT 1 FROM p.packages filterSp 
+                WHERE filterSp.price BETWEEN :minPrice AND :maxPrice
+            ))
+        """
+    )
+    Page<Product> searchProductsOrderBySoldCountDesc(
+            @Param("keyword") String keyword,
+            @Param("categoryIds") List<UUID> categoryIds,
+            @Param("minPrice") BigDecimal minPrice,
+            @Param("maxPrice") BigDecimal maxPrice,
+            Pageable pageable
+    );
+
+    // 4. Mặc định / Recommended (Ngày tạo mới nhất)
+    @Query(
+            value = """
+            SELECT p FROM Product p 
+            LEFT JOIN p.designer d 
+            WHERE p.isActive = true AND p.status = 'PUBLISHED' 
+            AND (d.username ILIKE CONCAT('%', :keyword, '%') OR p.title ILIKE CONCAT('%', :keyword, '%'))
+            AND (:categoryIds IS NULL OR EXISTS (SELECT 1 FROM p.categories c WHERE c.id IN :categoryIds)) 
+            AND (p.packages IS EMPTY OR EXISTS (
+                SELECT 1 FROM p.packages filterSp 
+                WHERE filterSp.price BETWEEN :minPrice AND :maxPrice
+            ))
+            ORDER BY p.createdAt DESC
+        """,
+            countQuery = """
+            SELECT COUNT(p) FROM Product p 
+            LEFT JOIN p.designer d 
+            WHERE p.isActive = true AND p.status = 'PUBLISHED' 
+            AND (d.username ILIKE CONCAT('%', :keyword, '%') OR p.title ILIKE CONCAT('%', :keyword, '%'))
+            AND (:categoryIds IS NULL OR EXISTS (SELECT 1 FROM p.categories c WHERE c.id IN :categoryIds)) 
+            AND (p.packages IS EMPTY OR EXISTS (
+                SELECT 1 FROM p.packages filterSp 
+                WHERE filterSp.price BETWEEN :minPrice AND :maxPrice
+            ))
+        """
+    )
+    Page<Product> searchProductsDefault(
+            @Param("keyword") String keyword,
+            @Param("categoryIds") List<UUID> categoryIds,
+            @Param("minPrice") BigDecimal minPrice,
+            @Param("maxPrice") BigDecimal maxPrice,
+            Pageable pageable
+    );
 }
