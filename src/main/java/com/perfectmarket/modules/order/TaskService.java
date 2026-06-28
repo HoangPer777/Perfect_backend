@@ -3,6 +3,7 @@ package com.perfectmarket.modules.order;
 import com.perfectmarket.modules.order.dto.response.BarChartDto;
 import com.perfectmarket.modules.order.dto.response.PieChartDto;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -11,6 +12,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+
+
+import org.springframework.data.domain.Sort;
+import org.springframework.web.server.ResponseStatusException;
+
+import static org.springframework.http.HttpStatus.NOT_FOUND;
 
 @Service
 @RequiredArgsConstructor
@@ -144,5 +151,54 @@ public class TaskService {
             return String.format("$%dk", (int) kilo);
         }
         return String.format("$%,.0f", value);
+    }
+
+    public List<AdminTaskListResponse> getAllTasks() {
+
+        return taskRepository.findAll(Sort.by(Sort.Direction.DESC, "createdAt"))
+                .stream()
+                .map(task -> AdminTaskListResponse.builder()
+                        .id(task.getId())
+                        .customerName(task.getCustomer().getFullName())
+                        .designerName(
+                                task.getDesigner() != null
+                                        ? task.getDesigner().getFullName()
+                                        : null
+                        )
+                        .serviceName(task.getServicePackage().getTitle())
+                        .title(task.getTitle())
+                        .status(task.getStatus())
+                        .actualPrice(task.getActualPrice())
+                        .createdAt(task.getCreatedAt())
+                        .build())
+                .toList();
+    }
+    public AdminTaskDetailResponse getTaskDetail(UUID taskId) {
+
+        Task task = taskRepository.findById(taskId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Task not found"
+                ));
+
+        return AdminTaskDetailResponse.builder()
+                .id(task.getId())
+                .customerName(task.getCustomer().getFullName())
+                .customerEmail(task.getCustomer().getEmail())
+                .designerName(
+                        task.getDesigner() != null
+                                ? task.getDesigner().getFullName()
+                                : null
+                )
+                .serviceName(task.getServicePackage().getTitle())
+                .title(task.getTitle())
+                .briefText(task.getBriefText())
+                .status(task.getStatus())
+                .actualPrice(task.getActualPrice())
+                .revisionsLeft(task.getRevisionsLeft())
+                .startedAt(task.getStartedAt())
+                .completedAt(task.getCompletedAt())
+                .createdAt(task.getCreatedAt())
+                .build();
     }
 }
