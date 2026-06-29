@@ -26,6 +26,7 @@ public class OrderServiceImpl implements OrderService {
     private final ProductRepository productRepository;
     private final OrderProductItemRepository orderProductItemRepository;
     private final ServicePackageRepository servicePackageRepository;
+    private final com.perfectmarket.modules.review.ReviewRepository reviewRepository;
 
 //    @Transactional
 //    public UUID createOrderFromCart(UUID userId, List<UUID> productIds) {
@@ -129,20 +130,30 @@ public class OrderServiceImpl implements OrderService {
                 .stream()
                 .collect(Collectors.toMap(Product::getId, p -> p));
 
+        List<com.perfectmarket.modules.review.Review> userReviews = reviewRepository.findByReviewerId(userId);
+        Map<UUID, com.perfectmarket.modules.review.Review> reviewMap = userReviews.stream()
+                .filter(r -> r.getProduct() != null)
+                .collect(Collectors.toMap(r -> r.getProduct().getId(), r -> r, (existing, replacement) -> existing));
+
         return orders.stream().map(order ->
                 new ProductOrderHistoryResponse(
                         order.getId(),
                         order.getCreatedAt(),
-                        order.getItems().stream().map(item ->
-                                new ProductOrderHistoryResponse.OrderItemDto(
-                                        item.getId(),
-                                        item.getProductTitle(),
-                                        productMap.containsKey(item.getProductId())
-                                                ? productMap.get(item.getProductId()).getThumbnailUrl()
-                                                : "/default-thumbnail.png",
-                                        item.getPriceAtPurchase()
-                                )
-                        ).toList()
+                        order.getItems().stream().map(item -> {
+                            boolean isReviewed = reviewMap.containsKey(item.getProductId());
+                            Integer rating = isReviewed ? reviewMap.get(item.getProductId()).getRating() : null;
+                            return new ProductOrderHistoryResponse.OrderItemDto(
+                                    item.getId(),
+                                    item.getProductId(),
+                                    item.getProductTitle(),
+                                    productMap.containsKey(item.getProductId())
+                                            ? productMap.get(item.getProductId()).getThumbnailUrl()
+                                            : "/default-thumbnail.png",
+                                    item.getPriceAtPurchase(),
+                                    isReviewed,
+                                    rating
+                            );
+                        }).toList()
                 )
         ).toList();
     }
