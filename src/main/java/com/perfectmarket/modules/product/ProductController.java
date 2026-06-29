@@ -102,4 +102,9 @@ public class ProductController {
                                                                          Pageable pageable) {
         return ResponseEntity.ok(productService.getFilteredProducts(keyword, categoryIdStr, minPrice, maxPrice, sortBy, pageable));
     }
+    @GetMapping("/admin")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    public ResponseEntity<List<AdminProductListResponse>> getAdminProducts() {
+        return ResponseEntity.ok(productService.getAdminProducts());
+    }
 }
