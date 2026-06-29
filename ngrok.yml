@@ -2,5 +2,5 @@ version: "2"
 tunnels:
   app:
     proto: http
-    addr: backend:8080
+    addr: host.docker.internal:8080
     domain: ${NGROK_DOMAIN}
