@@ -204,10 +204,12 @@ public class ProductService {
     private CardProductResponse mapToCardResponse(Product p) {
         String avatarUrl = null;
         String username = null;
+        UUID designerId = null;
 
         if(p.getDesigner() != null) {
             avatarUrl = p.getDesigner().getAvatarUrl();
             username = p.getDesigner().getUsername();
+            designerId = p.getDesigner().getId();
         }
 
         return new CardProductResponse(
@@ -218,6 +220,7 @@ public class ProductService {
                 p.getRatingAvg(),
                 p.getSoldCount(),
                 avatarUrl,
+                designerId,
                 username
         );
     }

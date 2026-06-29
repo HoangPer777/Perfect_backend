@@ -107,4 +107,9 @@ public class ProductController {
     public ResponseEntity<List<AdminProductListResponse>> getAdminProducts() {
         return ResponseEntity.ok(productService.getAdminProducts());
     }
+
+    @GetMapping("/designer")
+    public ResponseEntity<List<SnapshotProductResponse>> getDesignerProducts(@RequestParam UUID designerId) {
+        return ResponseEntity.ok(productService.getProductsByDesignerId(designerId));
+    }
 }

@@ -11,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.UUID;
 
@@ -298,5 +299,28 @@ public class AuthService {
         user.setSkills(skills);
         user.setExperienceYears(experienceYears != null ? experienceYears : 0);
         userRepository.save(user);
+    }
+
+    public UserInfoResponse getDesignerInfo(UUID designerId) {
+        User user = userRepository.findById(designerId)
+                .orElseThrow(() -> new NoSuchElementException("User not found with id: " + designerId));
+
+        return UserInfoResponse.builder()
+                .id(user.getId())
+                .email(user.getEmail())
+                .fullName(user.getFullName())
+                .username(user.getUsername())
+                .avatarUrl(user.getAvatarUrl())
+                .city(user.getCity())
+                .detailedAddress(user.getDetailedAddress())
+                .specialization(user.getSpecialization())
+                .bio(user.getBio())
+                .portfolioUrl(user.getPortfolioUrl())
+                .skills(user.getSkills())
+                .experienceYears(user.getExperienceYears())
+                .status(user.getStatus())
+                .isVerified(user.isVerified())
+                .createdAt(user.getCreatedAt())
+                .build();
     }
 }
