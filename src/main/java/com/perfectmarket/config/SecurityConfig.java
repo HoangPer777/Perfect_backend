@@ -55,8 +55,15 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/auth/**", "/login/oauth2/**", "/oauth2/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/products/**").permitAll()
                         .requestMatchers("/api/v1/designer/products").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/v1/services/get").permitAll()
-                        .requestMatchers("/api/v1/services/my-packages", "/api/v1/services/create").authenticated()
+                        .requestMatchers(HttpMethod.GET,
+                                "/api/v1/services",
+                                "/api/v1/services/get",
+                                "/api/v1/services/designers",
+                                "/api/v1/services/designers/**"
+                        ).permitAll()
+                        .requestMatchers("/api/v1/services/my-packages", "/api/v1/services/my-packages/**", "/api/v1/services/create").authenticated()
+                        .requestMatchers("/ws/chat/**").permitAll()
+                        .requestMatchers("/api/v1/chat/**").authenticated()
                         .anyRequest().authenticated()
                 )
                 .oauth2Login(oauth -> oauth.successHandler(oAuth2SuccessHandler))

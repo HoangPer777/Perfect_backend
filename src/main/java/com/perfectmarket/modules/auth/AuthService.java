@@ -50,7 +50,7 @@ public class AuthService {
                 .passwordHash(passwordEncoder.encode(req.password()))
                 .provider("LOCAL")
                 .isVerified(false)
-                .status("ACTIVE")
+                .status("INACTIVE")
                 .roles(Set.of(role))
                 .build();
 
@@ -141,8 +141,19 @@ public class AuthService {
 
     @Transactional
     public void verifyEmail(String token) {
-        EmailVerificationToken evt = emailVerificationTokenRepository.findByToken(token)
-                .orElseThrow(() -> new IllegalArgumentException("Invalid or expired verification token"));
+        verifyEmail(token, null);
+    }
+
+    @Transactional
+    public void verifyEmail(String token, String email) {
+        String normalizedToken = token == null ? "" : token.trim();
+        String normalizedEmail = email == null ? "" : email.trim();
+
+        EmailVerificationToken evt = normalizedEmail.isBlank()
+                ? emailVerificationTokenRepository.findByToken(normalizedToken)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid or expired verification token"))
+                : emailVerificationTokenRepository.findByUserEmailAndTokenAndUsedFalse(normalizedEmail, normalizedToken)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid verification code for this email"));
 
         if (evt.isUsed() || evt.isExpired()) {
             throw new IllegalArgumentException("Verification token has expired or already been used");

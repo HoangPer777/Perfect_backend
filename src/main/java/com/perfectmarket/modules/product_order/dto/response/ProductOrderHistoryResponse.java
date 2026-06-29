@@ -12,8 +12,11 @@ public record ProductOrderHistoryResponse(
 ) {
     public record OrderItemDto(
             UUID orderItemId,
+            UUID productId,
             String productTitle,
             String thumbnailUrl,
-            BigDecimal priceAtPurchase
+            BigDecimal priceAtPurchase,
+            Boolean isReviewed,
+            Integer rating
     ) {}
 }
