@@ -6,9 +6,15 @@ import com.perfectmarket.modules.product.Product;
 import com.perfectmarket.modules.product.ProductRepository;
 import com.perfectmarket.modules.service.dto.request.CreateServicePackageRequest;
 import com.perfectmarket.modules.service.dto.request.UpdateServicePackageRequest;
+
+import com.perfectmarket.modules.service.dto.response.DesignerServiceGroupResponse;
 import com.perfectmarket.modules.service.dto.response.ServicePackageResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 import java.util.List;
 import java.util.UUID;
@@ -169,5 +175,61 @@ public class ServicePackageService {
 
     public void delete(UUID id) {
         servicePackageRepository.deleteById(id);
+    }
+    public List<DesignerServiceGroupResponse> getDesignerServiceGroups() {
+        List<ServicePackage> packages = servicePackageRepository
+                .findByStatusOrderByDesigner_FullNameAscPackageTypeAsc("ACTIVE");
+
+        Map<UUID, DesignerServiceGroupResponse> designerMap = new LinkedHashMap<>();
+
+        for (ServicePackage servicePackage : packages) {
+            if (servicePackage.getDesigner() == null) {
+                continue;
+            }
+
+            UUID designerId = servicePackage.getDesigner().getId();
+
+            DesignerServiceGroupResponse designerGroup = designerMap.get(designerId);
+
+            if (designerGroup == null) {
+                designerGroup = new DesignerServiceGroupResponse(
+                        designerId,
+                        servicePackage.getDesigner().getUsername(),
+                        servicePackage.getDesigner().getAvatarUrl(),
+                        new ArrayList<>()
+                );
+
+                designerMap.put(designerId, designerGroup);
+            }
+
+            designerGroup.packages().add(mapToResponse(servicePackage));
+        }
+
+        return new ArrayList<>(designerMap.values());
+    }
+
+    public List<ServicePackageResponse> getAllPackagesByDesigner(UUID designerId) {
+        return servicePackageRepository
+                .findByDesigner_IdAndStatusOrderByPackageTypeAsc(designerId, "ACTIVE")
+                .stream()
+                .map(this::mapToResponse)
+                .toList();
+    }
+
+    private ServicePackageResponse mapToResponse(ServicePackage servicePackage) {
+        return new ServicePackageResponse(
+                servicePackage.getId(),
+                servicePackage.getTitle(),
+                servicePackage.getDescription(),
+                servicePackage.getPackageType(),
+                servicePackage.getPrice(),
+                servicePackage.getDeliveryDays(),
+                servicePackage.getRevisionsLimit(),
+                servicePackage.getProduct() != null ? servicePackage.getProduct().getId() : null,
+                servicePackage.getProduct() != null ? servicePackage.getProduct().getTitle() : null,
+                servicePackage.getDesigner() != null ? servicePackage.getDesigner().getId() : null,
+                servicePackage.getDesigner() != null ? servicePackage.getDesigner().getUsername() : null,
+                servicePackage.getDesigner() != null ? servicePackage.getDesigner().getAvatarUrl() : null
+        );
     }
 }
