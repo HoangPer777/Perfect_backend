@@ -42,12 +42,12 @@ INSERT INTO public.user_roles (user_id, role_id) VALUES
 ON CONFLICT (user_id, role_id) DO NOTHING;
 
 -- 4. Chèn Products
-INSERT INTO public.products (id, designer_id, title, description, price, status, is_active, thumbnail_url, created_at, updated_at) VALUES
-                                                                                                                                       ('cb0ec6c0-85e2-4cb4-8b20-8ddc90824c6c', '91717078-9da1-40f9-b1d6-922e3f561e8d', 'Professional E-Commerce Product Retouching & Color Correction Pack', 'High-end product retouching system.', 0, 'PUBLISHED', TRUE, 'https://res.cloudinary.com/dcyo10lft/image/upload/v1779643392/designer-projects/rmqrnv9rdvpeq9ucywqq.avif', '2026-05-25 00:23:13.3039', '2026-05-25 00:23:13.3039'),
-                                                                                                                                       ('810463cc-bbb4-4eaf-9022-83d564e07538', '91717078-9da1-40f9-b1d6-922e3f561e8d', 'High-Converting Social Media Banner Kit for Fashion', 'A dynamic set of promotional banners...', 0, 'PUBLISHED', TRUE, 'https://res.cloudinary.com/dcyo10lft/image/upload/v1779643435/designer-projects/cp0tshkux8opemueiafz.avif', '2026-05-25 00:23:57.237464', '2026-05-25 00:23:57.237464'),
-                                                                                                                                       ('a1fab818-cc4c-434e-be79-1acb85c37f8f', '91717078-9da1-40f9-b1d6-922e3f561e8d', 'Minimalist Web Hero Banner Design for Tech Store', 'Sleek Hero Banner template...', 0, 'PUBLISHED', TRUE, 'https://res.cloudinary.com/dcyo10lft/image/upload/v1779643486/designer-projects/phazh2ke6p13ayrvlxwp.jpg', '2026-05-25 00:24:46.773185', '2026-05-25 00:24:46.773185'),
-                                                                                                                                       ('a22e27d4-9824-4416-ba55-13db340c248c', '91717078-9da1-40f9-b1d6-922e3f561e8d', 'Vintage Photo Restoration & Cinematic Grading System', 'Professional photo restoration bundle...', 0, 'PUBLISHED', TRUE, 'https://res.cloudinary.com/dcyo10lft/image/upload/v1779643520/designer-projects/thifmmhjssr1pl5pdp5e.avif', '2026-05-25 00:25:20.969791', '2026-05-25 00:25:20.969791'),
-                                                                                                                                       ('aadcbfd9-56b6-4bb0-b879-f59968d164e5', '91717078-9da1-40f9-b1d6-922e3f561e8d', 'Abstract Neon Event Banner & Typography Template', 'Eye-catching event banner template...', 0, 'PUBLISHED', TRUE, 'https://res.cloudinary.com/dcyo10lft/image/upload/v1779643551/designer-projects/g1bx6amqiljrt2htozlk.avif', '2026-05-25 00:25:52.502848', '2026-05-25 00:25:52.502848')
+INSERT INTO public.products (id, designer_id, title, description, price, status, is_active, thumbnail_url, rating_avg, sold_count, view_count, created_at, updated_at) VALUES
+                                                                                                                                       ('cb0ec6c0-85e2-4cb4-8b20-8ddc90824c6c', '91717078-9da1-40f9-b1d6-922e3f561e8d', 'Professional E-Commerce Product Retouching & Color Correction Pack', 'High-end product retouching system.', 0, 'PUBLISHED', TRUE, 'https://res.cloudinary.com/dcyo10lft/image/upload/v1779643392/designer-projects/rmqrnv9rdvpeq9ucywqq.avif', 0, 0, 0, '2026-05-25 00:23:13.3039', '2026-05-25 00:23:13.3039'),
+                                                                                                                                       ('810463cc-bbb4-4eaf-9022-83d564e07538', '91717078-9da1-40f9-b1d6-922e3f561e8d', 'High-Converting Social Media Banner Kit for Fashion', 'A dynamic set of promotional banners...', 0, 'PUBLISHED', TRUE, 'https://res.cloudinary.com/dcyo10lft/image/upload/v1779643435/designer-projects/cp0tshkux8opemueiafz.avif', 0, 0, 0, '2026-05-25 00:23:57.237464', '2026-05-25 00:23:57.237464'),
+                                                                                                                                       ('a1fab818-cc4c-434e-be79-1acb85c37f8f', '91717078-9da1-40f9-b1d6-922e3f561e8d', 'Minimalist Web Hero Banner Design for Tech Store', 'Sleek Hero Banner template...', 0, 'PUBLISHED', TRUE, 'https://res.cloudinary.com/dcyo10lft/image/upload/v1779643486/designer-projects/phazh2ke6p13ayrvlxwp.jpg', 0, 0, 0, '2026-05-25 00:24:46.773185', '2026-05-25 00:24:46.773185'),
+                                                                                                                                       ('a22e27d4-9824-4416-ba55-13db340c248c', '91717078-9da1-40f9-b1d6-922e3f561e8d', 'Vintage Photo Restoration & Cinematic Grading System', 'Professional photo restoration bundle...', 0, 'PUBLISHED', TRUE, 'https://res.cloudinary.com/dcyo10lft/image/upload/v1779643520/designer-projects/thifmmhjssr1pl5pdp5e.avif', 0, 0, 0, '2026-05-25 00:25:20.969791', '2026-05-25 00:25:20.969791'),
+                                                                                                                                       ('aadcbfd9-56b6-4bb0-b879-f59968d164e5', '91717078-9da1-40f9-b1d6-922e3f561e8d', 'Abstract Neon Event Banner & Typography Template', 'Eye-catching event banner template...', 0, 'PUBLISHED', TRUE, 'https://res.cloudinary.com/dcyo10lft/image/upload/v1779643551/designer-projects/g1bx6amqiljrt2htozlk.avif', 0, 0, 0, '2026-05-25 00:25:52.502848', '2026-05-25 00:25:52.502848')
 ON CONFLICT (id) DO NOTHING;
 
 -- 5. Chèn Product_Images
@@ -57,11 +57,19 @@ INSERT INTO public.product_images (id, product_id, url, status, created_at) VALU
 ON CONFLICT (id) DO NOTHING;
 
 -- 6. Chèn Products_Categories
-INSERT INTO public.products_categories (category_id, product_id) VALUES
-                                                                     ('9f3159e2-1aca-4d8f-9676-6bf5aa7df6ed', 'cb0ec6c0-85e2-4cb4-8b20-8ddc90824c6c'),
-                                                                     ('6bbe712f-814a-441c-8fed-be748f440805', 'cb0ec6c0-85e2-4cb4-8b20-8ddc90824c6c'),
-                                                                     ('a139db66-5879-4352-a1c9-deea8b8eac98', 'cb0ec6c0-85e2-4cb4-8b20-8ddc90824c6c')
-ON CONFLICT (category_id, product_id) DO NOTHING;
+INSERT INTO public.products_categories (category_id, product_id)
+SELECT v.category_id, v.product_id
+FROM (VALUES
+          ('9f3159e2-1aca-4d8f-9676-6bf5aa7df6ed'::uuid, 'cb0ec6c0-85e2-4cb4-8b20-8ddc90824c6c'::uuid),
+          ('6bbe712f-814a-441c-8fed-be748f440805'::uuid, 'cb0ec6c0-85e2-4cb4-8b20-8ddc90824c6c'::uuid),
+          ('a139db66-5879-4352-a1c9-deea8b8eac98'::uuid, 'cb0ec6c0-85e2-4cb4-8b20-8ddc90824c6c'::uuid)
+     ) AS v(category_id, product_id)
+WHERE NOT EXISTS (
+    SELECT 1
+    FROM public.products_categories pc
+    WHERE pc.category_id = v.category_id
+      AND pc.product_id = v.product_id
+);
 
 -- Bật lại kiểm tra FK
 SET session_replication_role = 'origin';
