@@ -35,6 +35,9 @@ public class ServicePackage {
     
     private String status;
 
+
+
+
     public enum PackageType {
         BASIC, MEDIUM, PREMIUM, PRO_MAX, PRO, VIP, CUSTOM
     }
