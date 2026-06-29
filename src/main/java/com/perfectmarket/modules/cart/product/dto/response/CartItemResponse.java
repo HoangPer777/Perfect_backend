@@ -1,4 +1,4 @@
-package com.perfectmarket.modules.cart.dto.response;
+package com.perfectmarket.modules.cart.product.dto.response;
 
 import com.perfectmarket.modules.service.ServicePackage;
 import lombok.Builder;

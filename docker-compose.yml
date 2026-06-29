@@ -52,6 +52,21 @@ services:
       - "6379:6379"
     networks:
       - perfect-network
+  ngrok:
+    image: ngrok/ngrok:latest
+    restart: unless-stopped
+    ports:
+      - "4040:4040"
+    environment:
+      - NGROK_AUTHTOKEN=${NGROK_AUTHTOKEN}
+      - NGROK_DOMAIN=${NGROK_DOMAIN}
+    volumes:
+      - ./ngrok.yml:/etc/ngrok.yml
+    command: >
+      sh -c "sed -i 's/\${NGROK_DOMAIN}/'$$NGROK_DOMAIN'/g' /etc/ngrok.yml && 
+             ngrok start --all --config /etc/ngrok.yml"
+    networks:
+      - perfect-network
 
 networks:
   perfect-network:

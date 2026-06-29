@@ -1,0 +1,1 @@
+ALTER TABLE orders ALTER COLUMN designer_id DROP NOT NULL;

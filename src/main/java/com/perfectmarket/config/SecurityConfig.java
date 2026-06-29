@@ -47,6 +47,11 @@ public class SecurityConfig {
                         })
                 )
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
+                        .requestMatchers("/api/v1/payments/callback/**").permitAll()
+                        .requestMatchers("/favicon.ico", "/static/**", "/assets/**").permitAll()
+                        .requestMatchers("/api/v1/orders/**").authenticated()
+                        .requestMatchers("/api/v1/products/view", "/api/v1/products/newest", "/api/v1/products/hottest", "/api/v1/products/{id}").permitAll()
                         .requestMatchers("/api/v1/auth/**", "/login/oauth2/**", "/oauth2/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/products/**").permitAll()
                         .requestMatchers("/api/v1/designer/products").permitAll()
@@ -74,7 +79,7 @@ public class SecurityConfig {
                 frontendUrl
         ));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-        config.setAllowedHeaders(List.of("*"));
+        config.setAllowedHeaders(List.of("*")); // Cho phép tất cả các Headers để tránh lỗi chặn JWT Token
         config.setAllowCredentials(true);
 
         var source = new UrlBasedCorsConfigurationSource();

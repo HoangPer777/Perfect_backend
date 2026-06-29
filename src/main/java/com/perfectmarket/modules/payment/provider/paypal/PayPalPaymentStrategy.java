@@ -40,8 +40,24 @@ public class PayPalPaymentStrategy implements PaymentGatewayStrategy {
 
     @Override
     public String createPaymentUrl(PaymentSession session) {
+//        BigDecimal rate = paymentProperties.getExchangeRate().getVndToUsd();
+//        BigDecimal usdAmount = session.getTotalAmount().getAmount().divide(rate, 2, RoundingMode.HALF_UP);
+//        String accessToken = getAccessToken();
         BigDecimal rate = paymentProperties.getExchangeRate().getVndToUsd();
-        BigDecimal usdAmount = session.getTotalAmount().getAmount().divide(rate, 2, RoundingMode.HALF_UP);
+        if (rate == null || rate.compareTo(BigDecimal.ZERO) == 0) {
+            rate = new BigDecimal("25000");
+        }
+
+        BigDecimal totalVnd = session.getTotalAmount().getAmount();
+
+        BigDecimal usdAmount = totalVnd.divide(rate, 2, RoundingMode.CEILING);
+
+        if (usdAmount.compareTo(BigDecimal.ZERO) == 0) {
+            usdAmount = new BigDecimal("0.01");
+        }
+
+        log.info("DEBUG: VND Amount: {}, Rate: {}, Calculated USD: {}", totalVnd, rate, usdAmount);
+
         String accessToken = getAccessToken();
         var conf = paymentProperties.getPaypal();
 

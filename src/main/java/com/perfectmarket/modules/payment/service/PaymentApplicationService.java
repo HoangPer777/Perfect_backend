@@ -1,21 +1,22 @@
 package com.perfectmarket.modules.payment.service;
 
+import com.perfectmarket.modules.cart.product.repository.CartBannerRepository;
 import com.perfectmarket.modules.payment.domain.Money;
 import com.perfectmarket.modules.payment.domain.PaymentSession;
 import com.perfectmarket.modules.payment.domain.PaymentTransaction;
 import com.perfectmarket.modules.payment.dto.response.PaymentHistoryProjection;
 import com.perfectmarket.modules.payment.enums.PaymentProvider;
-import com.perfectmarket.modules.payment.enums.PaymentTransactionStatus;
 import com.perfectmarket.modules.payment.enums.PaymentTransactionType;
 import com.perfectmarket.modules.payment.port.PaymentGatewayStrategy;
 import com.perfectmarket.modules.payment.repository.PaymentSessionRepository;
+import com.perfectmarket.modules.product_order.entity.Order;
+import com.perfectmarket.modules.product_order.repository.OrderRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -26,34 +27,78 @@ public class PaymentApplicationService {
 
     private final PaymentSessionRepository sessionRepository;
     private final PaymentGatewayFactory gatewayFactory;
+    private final CartBannerRepository cartRepository;
+    private final OrderRepository orderRepository;
 
-    @Transactional
-    public String initializePayment(UUID userId, UUID orderId, Long amount, PaymentProvider provider) {
-        log.info("Khởi tạo thanh toán cho User: {}, Order: {}", userId, orderId);
+//    @Transactional
+//    public String initializePayment(UUID userId, UUID orderId, Long amount, PaymentProvider provider) {
+//        log.info("Khởi tạo thanh toán cho User: {}, Order: {}", userId, orderId);
+//
+//        PaymentSession session = new PaymentSession(
+//                orderId,
+//                new Money(BigDecimal.valueOf(amount), "VND"),
+//                UUID.randomUUID().toString()
+//        );
+//        try {
+//            log.info("Đang kiểm tra tính hợp lệ của session trước khi lưu...");
+//            sessionRepository.saveAndFlush(session);
+//        } catch (Exception e) {
+//            log.error("LỖI KHÔNG TƯỞNG: ", e);
+//            throw e;
+//        }
+//
+//        session.startProcessing();
+//        log.info("DEBUG: Kiểm tra giá trị trước khi save:");
+//        log.info(" - Session orderId: {}", session.getOrderId());
+//        log.info(" - Session Amount: {}", session.getTotalAmount()); // Kiểm tra xem Money có bị null không
+//        log.info(" - Session IdempotencyKey: {}", session.getIdempotencyKey());
+//        sessionRepository.save(session);
+//
+//        PaymentGatewayStrategy strategy = gatewayFactory.get(provider);
+//        return strategy.createPaymentUrl(session);
+//    }
+@Transactional
+public String initializePayment(UUID userId, UUID orderId, Long amount, PaymentProvider provider) {
+    log.info("Khởi tạo thanh toán cho User: {}, Order: {}, Amount: {}", userId, orderId, amount);
 
-        PaymentSession session = new PaymentSession(
-                orderId,
-                new Money(BigDecimal.valueOf(amount), "VND"),
-                UUID.randomUUID().toString()
-        );
-        try {
-            log.info("Đang kiểm tra tính hợp lệ của session trước khi lưu...");
-            sessionRepository.saveAndFlush(session);
-        } catch (Exception e) {
-            log.error("LỖI KHÔNG TƯỞNG: ", e); // Dòng này sẽ in ra stack trace đầy đủ nhất
-            throw e;
-        }
+    // 1. Kiểm tra sự tồn tại của Đơn hàng để đảm bảo khóa ngoại chuẩn xác
+    Order order = orderRepository.findById(orderId)
+            .orElseThrow(() -> new jakarta.persistence.EntityNotFoundException("Không tìm thấy Đơn hàng tương ứng với ID: " + orderId));
 
-        session.startProcessing();
-        log.info("DEBUG: Kiểm tra giá trị trước khi save:");
-        log.info(" - Session orderId: {}", session.getOrderId());
-        log.info(" - Session Amount: {}", session.getTotalAmount()); // Kiểm tra xem Money có bị null không
-        log.info(" - Session IdempotencyKey: {}", session.getIdempotencyKey());
-        sessionRepository.save(session);
-
-        PaymentGatewayStrategy strategy = gatewayFactory.get(provider);
-        return strategy.createPaymentUrl(session);
+    // 2. Chuyển đổi số tiền an toàn (Nếu FE truyền 250, đảm bảo chuyển đổi đúng sang BigDecimal)
+    BigDecimal totalAmount = (amount != null) ? BigDecimal.valueOf(amount) : order.getTotalPrice();
+    if (totalAmount == null || totalAmount.compareTo(BigDecimal.ZERO) <= 0) {
+        totalAmount = order.getTotalPrice(); // Dự phòng lấy từ Order trong DB nếu FE gửi sang lỗi
     }
+
+    // 3. Khởi tạo PaymentSession
+    // Lưu ý: Đảm bảo Constructor nhận đúng thứ tự tham số.
+    // Nếu Constructor nhận (UUID id, UUID orderId...), hãy truyền UUID.randomUUID() lên đầu.
+    PaymentSession session = new PaymentSession(
+            orderId, // Hoặc UUID.randomUUID() tùy thuộc vào cấu trúc thực thể Domain của bạn
+            new Money(totalAmount, "VND"),
+            UUID.randomUUID().toString()
+    );
+
+    try {
+        log.info("Đang tiến hành lưu Payment Session vào cơ sở dữ liệu...");
+        // Sử dụng save thông thường thay vì saveAndFlush đột ngột để Hibernate tự tối ưu Transaction
+        session = sessionRepository.save(session);
+    } catch (Exception e) {
+        log.error("LỖI KHI LƯU PAYMENT SESSION: ", e);
+        throw new RuntimeException("Không thể khởi tạo phiên giao dịch thanh toán: " + e.getMessage());
+    }
+
+    session.startProcessing();
+    sessionRepository.save(session);
+
+    // 4. Gọi Gateway Strategy để sinh Link điều hướng thanh toán
+    PaymentGatewayStrategy strategy = gatewayFactory.get(provider);
+    String paymentUrl = strategy.createPaymentUrl(session);
+
+    log.info("Khởi tạo đường dẫn thanh toán thành công: {}", paymentUrl);
+    return paymentUrl;
+}
 
     @Transactional
     public void processPaymentResult(Map<String, String> params, PaymentProvider provider) {
@@ -81,6 +126,57 @@ public class PaymentApplicationService {
 
             session.addTransaction(transaction);
             log.info("Thanh toán thành công. Session {} đã xử lý.", sessionId);
+
+//            try {
+//                // 1. Truy vấn Order để lấy đúng Customer ID
+//                Order order = orderRepository.findById(session.getOrderId())
+//                        .orElseThrow(() -> new RuntimeException("Không tìm thấy Order: " + session.getOrderId()));
+//
+//                UUID customerId = order.getCustomerId();
+//
+//                // 2. Dọn dẹp giỏ hàng
+//                cartRepository.findByUserId(customerId).ifPresent(cart -> {
+//                    // Việc gọi clear() và save() sẽ kích hoạt xóa SQL nếu có orphanRemoval = true
+//                    cart.getItems().clear();
+//                    cartRepository.save(cart);
+//                    log.info("Giỏ hàng của user {} đã được làm sạch sau thanh toán.", customerId);
+//                });
+//            } catch (Exception e) {
+//                log.error("Lỗi khi dọn dẹp giỏ hàng sau thanh toán cho đơn hàng {}: {}", session.getOrderId(), e.getMessage());
+//            }
+            try {
+                // 1. Truy vấn Order
+                Order order = orderRepository.findById(session.getOrderId())
+                        .orElseThrow(() -> new RuntimeException("Không tìm thấy Order: " + session.getOrderId()));
+
+                // LẤY DANH SÁCH ID SẢN PHẨM TỪ ĐƠN HÀNG
+                // Thay 'getItems()' bằng tên hàm lấy danh sách items trong Order của bạn
+                // Thay 'getProductId()' bằng tên hàm lấy ID sản phẩm trong class OrderItem (hoặc OrderDetail)
+                List<UUID> purchasedProductIds = order.getItems().stream()
+                        .map(item -> item.getProductId())
+                        .toList();
+
+                UUID customerId = order.getCustomerId();
+
+                // 2. Dọn dẹp giỏ hàng CÓ ĐIỀU KIỆN
+                cartRepository.findByUserId(customerId).ifPresent(cart -> {
+                    int beforeSize = cart.getItems().size();
+
+                    // Xóa những item trong giỏ có productId nằm trong danh sách đã mua
+                    // Thay 'getProductId()' bằng tên hàm lấy ID sản phẩm trong class CartItem của bạn
+                    boolean removed = cart.getItems().removeIf(cartItem ->
+                            purchasedProductIds.contains(cartItem.getProductId())
+                    );
+
+                    if (removed) {
+                        cartRepository.save(cart);
+                        log.info("Đã xóa {} sản phẩm đã thanh toán khỏi giỏ hàng của user {}", (beforeSize - cart.getItems().size()), customerId);
+                    }
+                });
+            } catch (Exception e) {
+                log.error("Lỗi khi dọn dẹp giỏ hàng cho đơn hàng {}: {}", session.getOrderId(), e.getMessage());
+            }
+
         } else {
             session.fail();
             log.error("Xác thực giao dịch thất bại cho Session: {}", sessionId);
