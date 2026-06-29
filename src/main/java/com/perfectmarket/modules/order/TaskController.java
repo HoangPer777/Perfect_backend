@@ -6,7 +6,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-
+import com.perfectmarket.modules.order.AdminTaskDetailResponse;
+import com.perfectmarket.modules.order.AdminTaskListResponse;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -48,5 +50,18 @@ public class TaskController {
             return ResponseEntity.status(org.springframework.http.HttpStatus.UNAUTHORIZED).build();
         }
         return ResponseEntity.ok(taskService.getTasksForUser(principal.id()));
+    }
+    @GetMapping("/admin")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    public ResponseEntity<List<AdminTaskListResponse>> getAllTasks() {
+        return ResponseEntity.ok(taskService.getAllTasks());
+
+    }
+    @GetMapping("/admin/{taskId}")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    public ResponseEntity<AdminTaskDetailResponse> getTaskDetail(
+            @PathVariable UUID taskId) {
+
+        return ResponseEntity.ok(taskService.getTaskDetail(taskId));
     }
 }

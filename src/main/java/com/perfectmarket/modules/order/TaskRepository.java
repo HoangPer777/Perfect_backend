@@ -3,16 +3,20 @@ package com.perfectmarket.modules.order;
 import com.perfectmarket.modules.order.dto.response.BarChartDto;
 import com.perfectmarket.modules.order.dto.response.PieChartDto;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.math.BigDecimal;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 public interface TaskRepository extends JpaRepository<Task, UUID> {
     List<Task> findByDesignerId(UUID designerId);
     List<Task> findByCustomerId(UUID customerId);
-    
+
     // TODO: Add filters by status (PENDING, PROCESSING, etc.)
 
     @Query(value = "SELECT TO_CHAR(t.completed_at, 'Dy') AS name, " +
@@ -89,4 +93,51 @@ public interface TaskRepository extends JpaRepository<Task, UUID> {
             "ORDER BY value DESC",
             nativeQuery = true)
     List<PieChartDto> getYearlyPieChartData(@Param("userId") UUID userId);
+
+
+    @Query("""
+SELECT t
+FROM Task t
+WHERE
+LOWER(t.title) LIKE LOWER(CONCAT('%', :keyword, '%'))
+OR LOWER(t.customer.fullName) LIKE LOWER(CONCAT('%', :keyword, '%'))
+OR LOWER(t.designer.fullName) LIKE LOWER(CONCAT('%', :keyword, '%'))
+ORDER BY t.createdAt DESC
+""")
+    Page<Task> search(
+            @Param("keyword") String keyword,
+            Pageable pageable
+    );
+
+    @Query("""
+SELECT t
+FROM Task t
+LEFT JOIN FETCH t.customer
+LEFT JOIN FETCH t.designer
+LEFT JOIN FETCH t.servicePackage
+WHERE t.id = :taskId
+""")
+    Optional<Task> findDetailById(
+            @Param("taskId") UUID taskId
+    );
+
+    long countByStatus(String status);
+
+    long countByDesignerId(UUID designerId);
+
+    long countByCustomerId(UUID customerId);
+// doanh thu
+
+    @Query("""
+SELECT COALESCE(SUM(t.actualPrice),0)
+FROM Task t
+WHERE t.status='COMPLETED'
+""")
+    BigDecimal getTotalRevenue();
+// tổng oders
+@Query("""
+SELECT COUNT(t)
+FROM Task t
+""")
+    long getTotalOrders();
 }
