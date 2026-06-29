@@ -79,7 +79,7 @@ public class SecurityConfig {
                 frontendUrl
         ));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-        config.setAllowedHeaders(List.of("*"));
+        config.setAllowedHeaders(List.of("*")); // Cho phép tất cả các Headers để tránh lỗi chặn JWT Token
         config.setAllowCredentials(true);
 
         var source = new UrlBasedCorsConfigurationSource();

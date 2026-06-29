@@ -22,7 +22,7 @@ public class ServicePackage {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "product_id")
     private Product product;
-
+    @Column(name = "name", nullable = false)
     private String title;
     private String description;
     

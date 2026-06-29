@@ -4,5 +4,6 @@ import java.util.List;
 import java.util.UUID;
 
 public record OrderCreateRequest(
-        List<UUID> productIds
+        List<UUID> productIds,
+        List<UUID> servicePackageIds
 ) {}

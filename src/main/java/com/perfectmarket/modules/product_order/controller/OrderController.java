@@ -20,13 +20,21 @@ public class OrderController {
     private final OrderService orderService;
     private final CurrentUserProvider currentUserProvider;
 
+    //    @PostMapping("/create")
+//    public ResponseEntity<Map<String, UUID>> createOrder(@RequestBody OrderCreateRequest request) {
+//        UUID userId = currentUserProvider.getCurrentUserId();
+//        UUID orderId = orderService.createOrderFromCart(userId, request.productIds());
+//
+//        return ResponseEntity.ok(Map.of("orderId", orderId));
+//    }
     @PostMapping("/create")
     public ResponseEntity<Map<String, UUID>> createOrder(@RequestBody OrderCreateRequest request) {
         UUID userId = currentUserProvider.getCurrentUserId();
-        UUID orderId = orderService.createOrderFromCart(userId, request.productIds());
+        UUID orderId = orderService.createOrderFromCart(userId, request);
 
         return ResponseEntity.ok(Map.of("orderId", orderId));
     }
+
     @GetMapping("/history")
     public ResponseEntity<List<ProductOrderHistoryResponse>> getOrderHistory() {
         UUID userId = currentUserProvider.getCurrentUserId();
