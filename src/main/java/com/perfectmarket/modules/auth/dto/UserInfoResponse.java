@@ -1,4 +1,4 @@
-package com.perfectmarket.modules.admin.dto.response;
+package com.perfectmarket.modules.auth.dto;
 
 import lombok.Builder;
 
