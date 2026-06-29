@@ -19,7 +19,7 @@ spring:
   jpa:
     hibernate:
       ddl-auto: update
-    show-sql: true
+    show-sql: ${JPA_SHOW_SQL:false}
     properties:
       hibernate:
         format_sql: true
@@ -59,10 +59,12 @@ spring:
           google:
             client-id: ${GOOGLE_CLIENT_ID}
             client-secret: ${GOOGLE_CLIENT_SECRET}
+            redirect-uri: ${OAUTH2_REDIRECT_BASE_URI:http://localhost:8080}/login/oauth2/code/{registrationId}
             scope: profile, email
           facebook:
             client-id: ${FACEBOOK_CLIENT_ID}
             client-secret: ${FACEBOOK_CLIENT_SECRET}
+            redirect-uri: ${OAUTH2_REDIRECT_BASE_URI:http://localhost:8080}/login/oauth2/code/{registrationId}
             scope: public_profile, email
 
 # JWT Configuration
@@ -94,8 +96,8 @@ logging:
   level:
     com.perfectmarket: DEBUG
     org.springframework.security: INFO
-    org.hibernate.SQL: DEBUG
-    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+    org.hibernate.SQL: ${HIBERNATE_SQL_LOG_LEVEL:INFO}
+    org.hibernate.type.descriptor.sql.BasicBinder: ${HIBERNATE_BINDER_LOG_LEVEL:INFO}
 
 # Payment Configuration
 payment:

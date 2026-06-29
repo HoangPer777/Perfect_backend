@@ -56,7 +56,7 @@ public class AuthController {
     public ResponseEntity<Map<String, String>> verifyEmail(
         @Valid @RequestBody VerifyEmailRequest req
     ) {
-        authService.verifyEmail(req.token());
+        authService.verifyEmail(req.token(), req.email());
         return ResponseEntity.ok(Map.of("message", "Email verified successfully."));
     }
 
