@@ -4,5 +4,5 @@ import java.math.BigDecimal;
 import java.util.UUID;
 
 public record CardProductResponse(UUID id, String title, BigDecimal price, String thumbnailUrl,
-                                  Double ratingAvg, Integer soldCount, String avatarUrlDesigner, String usernameDesigner) {
+                                  Double ratingAvg, Integer soldCount, String avatarUrlDesigner, UUID designerId, String usernameDesigner) {
 }
