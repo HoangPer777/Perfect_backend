@@ -1,13 +1,13 @@
-package com.perfectmarket.modules.cart.service.impl;
+package com.perfectmarket.modules.cart.product.service.impl;
 
-import com.perfectmarket.modules.cart.dto.request.AddToCartRequest;
-import com.perfectmarket.modules.cart.dto.request.UpdateCartItemRequest;
-import com.perfectmarket.modules.cart.dto.response.CartResponse;
-import com.perfectmarket.modules.cart.entity.Cart;
-import com.perfectmarket.modules.cart.entity.CartItem;
-import com.perfectmarket.modules.cart.repository.CartItemRepository;
-import com.perfectmarket.modules.cart.repository.CartRepository;
-import com.perfectmarket.modules.cart.service.CartService;
+import com.perfectmarket.modules.cart.product.dto.request.AddToCartRequest;
+import com.perfectmarket.modules.cart.product.dto.request.UpdateCartItemRequest;
+import com.perfectmarket.modules.cart.product.dto.response.CartResponse;
+import com.perfectmarket.modules.cart.product.entity.CartBanner;
+import com.perfectmarket.modules.cart.product.entity.CartBannerItem;
+import com.perfectmarket.modules.cart.product.repository.CartBannerItemRepository;
+import com.perfectmarket.modules.cart.product.repository.CartBannerRepository;
+import com.perfectmarket.modules.cart.product.service.CartService;
 import com.perfectmarket.modules.product.Product;
 import com.perfectmarket.modules.product.ProductRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,8 +24,8 @@ import java.util.stream.Collectors;
 @Service
 public class CartServiceImpl implements CartService {
     @Autowired
-    private CartRepository cartRepository;
-    @Autowired private CartItemRepository cartItemRepository;
+    private CartBannerRepository cartRepository;
+    @Autowired private CartBannerItemRepository cartItemRepository;
     @Autowired private ProductRepository productRepository;
     @Transactional // Đảm bảo toàn bộ thao tác là một transaction
     public void addToCart(UUID userId, AddToCartRequest request) {
@@ -33,23 +33,20 @@ public class CartServiceImpl implements CartService {
             throw new RuntimeException("Người dùng chưa đăng nhập!");
         }
 
-        // 1. Tìm Cart, nếu không có thì tạo mới VÀ LƯU NGAY
-        Cart cart = cartRepository.findByUserId(userId)
+        CartBanner cart = cartRepository.findByUserId(userId)
                 .orElseGet(() -> {
-                    Cart newCart = new Cart(userId);
-                    return cartRepository.save(newCart); // SAVE NGAY ĐỂ CÓ ID
+                    CartBanner newCart = new CartBanner(userId);
+                    return cartRepository.save(newCart);
                 });
 
-        // 2. Tìm xem đã có sản phẩm này trong giỏ chưa
-        Optional<CartItem> existingItem = cartItemRepository.findByCartIdAndProductId(cart.getId(), request.productId());
+        Optional<CartBannerItem> existingItem = cartItemRepository.findByCartIdAndProductId(cart.getId(), request.productId());
 
         if (existingItem.isPresent()) {
-            CartItem item = existingItem.get();
+            CartBannerItem item = existingItem.get();
             item.setQuantity(item.getQuantity() + request.quantity());
             cartItemRepository.save(item);
         } else {
-            // 3. Bây giờ cart đã chắc chắn có ID, việc lưu newItem sẽ không bao giờ lỗi "transient instance"
-            CartItem newItem = new CartItem(cart, request.productId(), request.quantity());
+            CartBannerItem newItem = new CartBannerItem(cart, request.productId(), request.quantity());
             cartItemRepository.save(newItem);
         }
     }
@@ -69,8 +66,8 @@ public class CartServiceImpl implements CartService {
     }
 
     public CartResponse getCart(UUID userId) {
-        Cart cart = cartRepository.findByUserId(userId)
-                .orElse(new Cart(userId));
+        CartBanner cart = cartRepository.findByUserId(userId)
+                .orElse(new CartBanner(userId));
         if (cart.getItems() == null || cart.getItems().isEmpty()) {
             return new CartResponse(cart.getId(), List.of(), BigDecimal.ZERO);
         }
@@ -80,9 +77,9 @@ public class CartServiceImpl implements CartService {
     @Override
     @Transactional
     public void updateItemQuantity(UUID userId, UpdateCartItemRequest request) {
-        Cart cart = cartRepository.findByUserId(userId)
+        CartBanner cart = cartRepository.findByUserId(userId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy giỏ hàng"));
-        CartItem item = cartItemRepository.findByCartIdAndProductId(cart.getId(), request.productId())
+        CartBannerItem item = cartItemRepository.findByCartIdAndProductId(cart.getId(), request.productId())
                 .orElseThrow(() -> new RuntimeException("Sản phẩm không có trong giỏ hàng"));
         if (request.quantity() > 0) {
             item.setQuantity(request.quantity());
@@ -92,9 +89,9 @@ public class CartServiceImpl implements CartService {
         }
     }
 
-    private CartResponse convertToResponse(Cart cart) {
+    private CartResponse convertToResponse(CartBanner cart) {
         List<UUID> productIds = cart.getItems().stream()
-                .map(CartItem::getProductId).toList();
+                .map(CartBannerItem::getProductId).toList();
 
         List<Product> products = productRepository.findAllById(productIds);
         Map<UUID, Product> productMap = products.stream()

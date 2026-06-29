@@ -1,4 +1,4 @@
-package com.perfectmarket.modules.cart.dto.response;
+package com.perfectmarket.modules.cart.product.dto.response;
 
 import java.math.BigDecimal;
 import java.util.List;

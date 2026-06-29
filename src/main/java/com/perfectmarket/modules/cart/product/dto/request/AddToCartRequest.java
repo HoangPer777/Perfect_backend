@@ -1,4 +1,4 @@
-package com.perfectmarket.modules.cart.dto.request;
+package com.perfectmarket.modules.cart.product.dto.request;
 import java.util.UUID;
 
 public record AddToCartRequest(

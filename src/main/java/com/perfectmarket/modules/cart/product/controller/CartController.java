@@ -1,17 +1,17 @@
-package com.perfectmarket.modules.cart.controller;
+package com.perfectmarket.modules.cart.product.controller;
 
 import com.perfectmarket.modules.auth.security.JwtCurrentUserProvider;
-import com.perfectmarket.modules.cart.dto.request.AddToCartRequest;
-import com.perfectmarket.modules.cart.dto.request.UpdateCartItemRequest;
-import com.perfectmarket.modules.cart.dto.response.CartResponse;
-import com.perfectmarket.modules.cart.service.CartService;
+import com.perfectmarket.modules.cart.product.dto.request.AddToCartRequest;
+import com.perfectmarket.modules.cart.product.dto.request.UpdateCartItemRequest;
+import com.perfectmarket.modules.cart.product.dto.response.CartResponse;
+import com.perfectmarket.modules.cart.product.service.CartService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
 
-@RestController
+@RestController("otherCartController")
 @RequestMapping("/api/v1/cart")
 public class CartController {
 

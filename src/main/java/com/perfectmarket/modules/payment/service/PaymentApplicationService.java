@@ -1,12 +1,11 @@
 package com.perfectmarket.modules.payment.service;
 
-import com.perfectmarket.modules.cart.repository.CartRepository;
+import com.perfectmarket.modules.cart.product.repository.CartBannerRepository;
 import com.perfectmarket.modules.payment.domain.Money;
 import com.perfectmarket.modules.payment.domain.PaymentSession;
 import com.perfectmarket.modules.payment.domain.PaymentTransaction;
 import com.perfectmarket.modules.payment.dto.response.PaymentHistoryProjection;
 import com.perfectmarket.modules.payment.enums.PaymentProvider;
-import com.perfectmarket.modules.payment.enums.PaymentTransactionStatus;
 import com.perfectmarket.modules.payment.enums.PaymentTransactionType;
 import com.perfectmarket.modules.payment.port.PaymentGatewayStrategy;
 import com.perfectmarket.modules.payment.repository.PaymentSessionRepository;
@@ -18,7 +17,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -29,7 +27,7 @@ public class PaymentApplicationService {
 
     private final PaymentSessionRepository sessionRepository;
     private final PaymentGatewayFactory gatewayFactory;
-    private final CartRepository cartRepository;
+    private final CartBannerRepository cartRepository;
     private final OrderRepository orderRepository;
 
     @Transactional
