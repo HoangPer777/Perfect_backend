@@ -12,4 +12,10 @@ public interface ServicePackageRepository extends JpaRepository<ServicePackage, 
     List<ServicePackage> findAllByProduct_IdAndDesigner_IdAndStatus(UUID productId, UUID designerId, String status);
     List<ServicePackage> findAllByDesigner_IdAndStatus(UUID designerId, String status);
     List<ServicePackage> findAllByStatus(String status);
+
+    // Quản lý dịch vụ: lấy các gói dịch vụ đang active của designer
+    List<ServicePackage> findByDesigner_IdAndStatusOrderByPackageTypeAsc(UUID designerId, String status);
+
+    // Quản lý dịch vụ: lấy tất cả gói active để gom theo designer
+    List<ServicePackage> findByStatusOrderByDesigner_FullNameAscPackageTypeAsc(String status);
 }

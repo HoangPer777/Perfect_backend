@@ -4,6 +4,7 @@ import com.perfectmarket.modules.auth.User;
 import com.perfectmarket.modules.auth.UserRepository;
 import com.perfectmarket.modules.product.dto.request.CreateProductRequest;
 import com.perfectmarket.modules.product.dto.response.*;
+import com.perfectmarket.modules.service.dto.response.ServicePackageResponse;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -12,6 +13,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.PageRequest;
+
+import com.perfectmarket.modules.product.dto.response.AdminProductListResponse;
+import com.perfectmarket.modules.service.ServicePackage;
 
 import java.math.BigDecimal;
 import java.util.*;
@@ -24,6 +28,7 @@ public class ProductService {
     private final UserRepository userRepository;
     private final ProductImageRepository productImageRepository;
     private final CategoryRepository categoryRepository;
+
 
     @Transactional
     public CreateProductResponse createProduct(UUID userId, CreateProductRequest request) {
@@ -264,5 +269,80 @@ public class ProductService {
         }
 
         return result.map(this::mapToCardResponse);
+    }
+    @Transactional(readOnly = true)
+    public List<AdminProductListResponse> getAdminProducts() {
+
+        return productRepository.findAllByOrderByCreatedAtDesc()
+                .stream()
+                .map(product -> {
+
+                    ServicePackageResponse basic = null;
+                    ServicePackageResponse pro = null;
+                    ServicePackageResponse vip = null;
+
+                    if (product.getPackages() != null) {
+
+                        for (ServicePackage service : product.getPackages()) {
+
+                            ServicePackageResponse response =
+                                    new ServicePackageResponse(
+
+                                            service.getId(),
+                                            service.getTitle(),
+                                            service.getDescription(),
+                                            service.getPackageType(),
+                                            service.getPrice(),
+                                            service.getDeliveryDays(),
+                                            service.getRevisionsLimit(),
+
+                                            product.getId(),
+                                            product.getTitle(),
+
+                                            product.getDesigner().getId(),
+                                            product.getDesigner().getUsername(),
+                                            product.getDesigner().getAvatarUrl()
+
+                                    );
+
+                            switch (service.getPackageType()) {
+
+                                case BASIC -> basic = response;
+
+                                case PRO -> pro = response;
+
+                                case VIP -> vip = response;
+
+                                default -> {
+                                }
+
+                            }
+
+                        }
+
+                    }
+
+                    return new AdminProductListResponse(
+
+                            product.getId(),
+                            product.getTitle(),
+                            product.getThumbnailUrl(),
+                            product.getDesigner() != null
+                                    ? product.getDesigner().getUsername()
+                                    : "-",
+                            product.getStatus(),
+                            product.getPrice(),
+
+                            basic,
+                            pro,
+                            vip,
+
+                            product.getCreatedAt()
+
+                    );
+
+                })
+                .toList();
+
     }
 }

@@ -10,6 +10,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import com.perfectmarket.modules.service.dto.response.DesignerServiceGroupResponse;
+
 import java.util.List;
 import java.util.UUID;
 
@@ -22,6 +24,16 @@ public class ServicePackageController {
     @GetMapping
     public ResponseEntity<List<ServicePackageResponse>> getAllActivePackages() {
         return ResponseEntity.ok(servicePackageService.getAllActivePackages());
+    }
+    @GetMapping("/designers")
+    public ResponseEntity<List<DesignerServiceGroupResponse>> getDesignerServiceGroups() {
+        return ResponseEntity.ok(servicePackageService.getDesignerServiceGroups());
+    }
+    @GetMapping("/designers/{designerId}")
+    public ResponseEntity<List<ServicePackageResponse>> getAllPackagesByDesigner(
+            @PathVariable UUID designerId
+    ) {
+        return ResponseEntity.ok(servicePackageService.getAllPackagesByDesigner(designerId));
     }
 
     @GetMapping("/get")
@@ -65,5 +77,7 @@ public class ServicePackageController {
         servicePackageService.delete(id);
         return ResponseEntity.noContent().build();
     }
+
+
 }
 
