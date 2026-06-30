@@ -11,4 +11,6 @@ public interface OrderService {
     UUID createOrderFromCart(UUID userId, OrderCreateRequest request);
 
     List<ProductOrderHistoryResponse> getProductOrderHistory(UUID userId);
+
+    String getDownloadUrlForProduct(UUID userId, UUID orderItemId);
 }

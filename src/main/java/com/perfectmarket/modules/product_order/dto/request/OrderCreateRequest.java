@@ -6,4 +6,5 @@ import java.util.UUID;
 public record OrderCreateRequest(
         List<UUID> productIds,
         List<UUID> servicePackageIds
+
 ) {}

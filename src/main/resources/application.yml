@@ -23,7 +23,6 @@ spring:
     properties:
       hibernate:
         format_sql: true
-        dialect: org.hibernate.dialect.PostgreSQLDialect
         jdbc.batch_size: 20
         order_inserts: true
         order_updates: true
@@ -92,13 +91,19 @@ storage:
       secret-key: ${S3_SECRET_KEY}
 
 # Logging Configuration
+#logging:
+#  level:
+#    com.perfectmarket: DEBUG
+#    org.springframework.security: INFO
+#    org.hibernate.SQL: ${HIBERNATE_SQL_LOG_LEVEL:INFO}
+#    org.hibernate.type.descriptor.sql.BasicBinder: ${HIBERNATE_BINDER_LOG_LEVEL:INFO}
 logging:
   level:
     com.perfectmarket: DEBUG
-    org.springframework.security: INFO
-    org.hibernate.SQL: ${HIBERNATE_SQL_LOG_LEVEL:INFO}
-    org.hibernate.type.descriptor.sql.BasicBinder: ${HIBERNATE_BINDER_LOG_LEVEL:INFO}
-
+    org.springframework.security: DEBUG
+    org.springframework.orm.jpa: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.orm.jdbc.bind: TRACE
 # Payment Configuration
 payment:
   exchange-rate:

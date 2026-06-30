@@ -50,7 +50,7 @@ public class SecurityConfig {
                         .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/api/v1/payments/callback/**").permitAll()
                         .requestMatchers("/favicon.ico", "/static/**", "/assets/**").permitAll()
-                        .requestMatchers("/api/v1/orders/**").authenticated()
+                        .requestMatchers("/api/v1/orders/**").permitAll()
                         .requestMatchers("/api/v1/products/view", "/api/v1/products/newest", "/api/v1/products/hottest", "/api/v1/products/{id}").permitAll()
                         .requestMatchers("/api/v1/auth/**", "/login/oauth2/**", "/oauth2/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/products/**").permitAll()
@@ -60,7 +60,9 @@ public class SecurityConfig {
                                 "/api/v1/services/get",
                                 "/api/v1/services/designers",
                                 "/api/v1/services/designers/**"
+//                                , "/api/v1/orders//download-link/**"
                         ).permitAll()
+                        .requestMatchers("/api/v1/orders/download-link/**").authenticated()
                         .requestMatchers("/api/v1/services/my-packages", "/api/v1/services/my-packages/**", "/api/v1/services/create").authenticated()
                         .requestMatchers("/ws/chat/**").permitAll()
                         .requestMatchers("/api/v1/chat/**").authenticated()

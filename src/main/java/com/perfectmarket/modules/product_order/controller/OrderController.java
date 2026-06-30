@@ -28,11 +28,26 @@ public class OrderController {
 //        return ResponseEntity.ok(Map.of("orderId", orderId));
 //    }
     @PostMapping("/create")
-    public ResponseEntity<Map<String, UUID>> createOrder(@RequestBody OrderCreateRequest request) {
-        UUID userId = currentUserProvider.getCurrentUserId();
-        UUID orderId = orderService.createOrderFromCart(userId, request);
+    public ResponseEntity<?> createOrder(@RequestBody OrderCreateRequest request) {
+        try {
+            UUID userId = currentUserProvider.getCurrentUserId();
+            if (userId == null) {
+                return ResponseEntity.status(401).body("User không hợp lệ");
+            }
 
-        return ResponseEntity.ok(Map.of("orderId", orderId));
+            UUID orderId = orderService.createOrderFromCart(userId, request);
+            return ResponseEntity.ok(Map.of("orderId", orderId));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.internalServerError().body("Lỗi hệ thống: " + e.getMessage());
+        }
+    }
+    @GetMapping("/download-link/{orderItemId}")
+    public ResponseEntity<Map<String, String>> getDownloadLink(@PathVariable UUID orderItemId) {
+        UUID userId = currentUserProvider.getCurrentUserId();
+        String downloadUrl = orderService.getDownloadUrlForProduct(userId, orderItemId);
+
+        return ResponseEntity.ok(Map.of("downloadUrl", downloadUrl));
     }
 
     @GetMapping("/history")
