@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import java.time.LocalDateTime;
 
 import java.math.BigDecimal;
 import java.util.HashMap;
@@ -64,6 +65,61 @@ public class TaskService {
 
     public List<Task> getTasksForUser(UUID userId) {
         return taskRepository.findByCustomerId(userId);
+    }
+
+    public List<DesignerTaskResponse> getTasksForDesigner(UUID designerId) {
+        List<Task> tasks = taskRepository.findByDesignerId(designerId);
+        return tasks.stream().map(task -> {
+            DesignerTaskResponse.CustomerInfo customerInfo = null;
+            if (task.getCustomer() != null) {
+                customerInfo = DesignerTaskResponse.CustomerInfo.builder()
+                        .id(task.getCustomer().getId())
+                        .fullName(task.getCustomer().getFullName())
+                        .email(task.getCustomer().getEmail())
+                        .build();
+            }
+
+            DesignerTaskResponse.ServicePackageInfo packageInfo = null;
+            if (task.getServicePackage() != null) {
+                packageInfo = DesignerTaskResponse.ServicePackageInfo.builder()
+                        .id(task.getServicePackage().getId())
+                        .title(task.getServicePackage().getTitle())
+                        .price(task.getServicePackage().getPrice())
+                        .build();
+            }
+
+            return DesignerTaskResponse.builder()
+                    .id(task.getId())
+                    .customer(customerInfo)
+                    .servicePackage(packageInfo)
+                    .title(task.getTitle())
+                    .briefText(task.getBriefText())
+                    .status(task.getStatus())
+                    .revisionsLeft(task.getRevisionsLeft())
+                    .actualPrice(task.getActualPrice())
+                    .startedAt(task.getStartedAt())
+                    .completedAt(task.getCompletedAt())
+                    .createdAt(task.getCreatedAt())
+                    .build();
+        }).toList();
+    }
+
+    @Transactional
+    public Task updateTaskStatus(UUID taskId, String newStatus) {
+        Task task = taskRepository.findById(taskId)
+                .orElseThrow(() -> new IllegalArgumentException("Task not found with ID: " + taskId));
+        
+        String currentStatus = task.getStatus();
+        if ("PENDING".equals(currentStatus) && "PROCESSING".equals(newStatus)) {
+            task.setStartedAt(LocalDateTime.now());
+        } else if ("PROCESSING".equals(currentStatus) && "COMPLETED".equals(newStatus)) {
+            task.setCompletedAt(LocalDateTime.now());
+        } else if ("REVIEWING".equals(currentStatus) && "COMPLETED".equals(newStatus)) {
+            task.setCompletedAt(LocalDateTime.now());
+        }
+        
+        task.setStatus(newStatus);
+        return taskRepository.save(task);
     }
 
     public Map<String, Object> getFullDashboardAnalytics(UUID userId) {
