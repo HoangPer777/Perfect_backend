@@ -31,11 +31,20 @@ public class TaskController {
     // TODO: Customer: Open Dispute (COMPLETED & Star < 3 -> DISPUTED)
 
     @PatchMapping("/{taskId}/status")
-    public String updateStatus(@PathVariable String taskId, @RequestParam String status) {
-        return "TODO: Implement Task State Machine Transitions";
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_DESIGNER', 'ROLE_CUSTOMER')")
+    public ResponseEntity<Task> updateStatus(@PathVariable UUID taskId, @RequestParam String status) {
+        return ResponseEntity.ok(taskService.updateTaskStatus(taskId, status));
     }
 
-    // TODO: Download brief/documents (S3 integration)
+    @GetMapping("/designer")
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_DESIGNER')")
+    public ResponseEntity<List<DesignerTaskResponse>> getDesignerTasks(@AuthenticationPrincipal UserPrincipal principal) {
+        if (principal == null) {
+            return ResponseEntity.status(org.springframework.http.HttpStatus.UNAUTHORIZED).build();
+        }
+        UUID userId = principal.id();
+        return ResponseEntity.ok(taskService.getTasksForDesigner(userId));
+    }
 
     @GetMapping("/designer/chart")
     @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_DESIGNER')")
