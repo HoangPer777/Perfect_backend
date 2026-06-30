@@ -67,4 +67,8 @@ public class PaymentSession {
         this.transactions.add(transaction);
 
     }
+
+    public void setCompleted() {
+        this.status = PaymentSessionStatus.COMPLETED;
+    }
 }

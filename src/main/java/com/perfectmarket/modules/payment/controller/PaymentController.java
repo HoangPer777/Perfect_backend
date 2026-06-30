@@ -60,8 +60,11 @@ public class PaymentController {
     @GetMapping(value = "/callback/{provider}", produces = org.springframework.http.MediaType.TEXT_HTML_VALUE)
     public ResponseEntity<String> handlePaymentReturn(@PathVariable String provider, @RequestParam Map<String, String> allParams) {
         try {
+            log.info("1000000");
             PaymentProvider paymentProvider = PaymentProvider.valueOf(provider.toUpperCase());
+            log.info("2000000");
             paymentService.processPaymentResult(allParams, paymentProvider);
+            log.info("3000000");
             return ResponseEntity.ok(getSuccessHtml(provider.toUpperCase()));
         } catch (Exception e) {
             log.error("Lỗi xử lý callback {}: {}", provider, e.getMessage());

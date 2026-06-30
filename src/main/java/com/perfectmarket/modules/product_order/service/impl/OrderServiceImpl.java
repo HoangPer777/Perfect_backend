@@ -67,7 +67,7 @@ public class OrderServiceImpl implements OrderService {
         BigDecimal total = BigDecimal.ZERO;
         Order order = Order.builder()
                 .customerId(userId)
-                .status(OrderStatus.NOT_PAID)
+                .status(OrderStatus.COMPLETED)
                 .items(new ArrayList<>())
                 .build();
 

@@ -62,6 +62,7 @@ public class SecurityConfig {
                                 "/api/v1/services/designers/**"
 //                                , "/api/v1/orders//download-link/**"
                         ).permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/reviews/product").permitAll()
                         .requestMatchers("/api/v1/orders/download-link/**").authenticated()
                         .requestMatchers("/api/v1/services/my-packages", "/api/v1/services/my-packages/**", "/api/v1/services/create").authenticated()
                         .requestMatchers("/ws/chat/**").permitAll()
