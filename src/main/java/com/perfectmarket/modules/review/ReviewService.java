@@ -30,11 +30,10 @@ public class ReviewService {
     public ReviewResponse createProductReview(UUID reviewerId, CreateReviewRequest request) {
         UUID productId = request.productId();
 
-        // 1. Kiểm tra xem người dùng đã mua sản phẩm này chưa
-        boolean purchased = orderProductItemRepository.hasUserPurchasedProduct(reviewerId, productId, OrderStatus.COMPLETED);
-        if (!purchased) {
-            throw new IllegalStateException("Bạn chỉ có thể đánh giá sản phẩm sau khi đã mua thành công!");
-        }
+//        boolean purchased = orderProductItemRepository.hasUserPurchasedProduct(reviewerId, productId, OrderStatus.COMPLETED);
+//        if (!purchased) {
+//            throw new IllegalStateException("Bạn chỉ có thể đánh giá sản phẩm sau khi đã mua thành công!");
+//        }
 
         // 2. Kiểm tra xem đã đánh giá sản phẩm này chưa
         if (reviewRepository.findByReviewerIdAndProductId(reviewerId, productId).isPresent()) {
