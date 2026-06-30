@@ -67,54 +67,31 @@ public class OrderServiceImpl implements OrderService {
         BigDecimal total = BigDecimal.ZERO;
         Order order = Order.builder()
                 .customerId(userId)
-                .totalPrice(BigDecimal.ZERO)
                 .status(OrderStatus.NOT_PAID)
                 .items(new ArrayList<>())
                 .build();
 
-        // Duyệt trực tiếp qua mảng productIds từ request để đảm bảo đúng thứ tự index
-        for (int i = 0; i < request.productIds().size(); i++) {
-            UUID productId = request.productIds().get(i);
-
-            // Tìm kiếm thực thể Product trong Database
+        for (UUID productId : request.productIds()) {
             Product product = productRepository.findById(productId)
-                    .orElseThrow(() -> new jakarta.persistence.EntityNotFoundException("Không tìm thấy sản phẩm với ID: " + productId));
+                    .orElseThrow(() -> new jakarta.persistence.EntityNotFoundException("Không tìm thấy sản phẩm: " + productId));
 
-            BigDecimal priceAtPurchase = product.getPrice(); // Mặc định lấy giá sản phẩm thường
+            BigDecimal priceAtPurchase = product.getPrice();
 
-            // KIỂM TRA: Nếu tại index này có chứa ID gói dịch vụ
-            if (request.servicePackageIds() != null && i < request.servicePackageIds().size()) {
-                UUID spId = request.servicePackageIds().get(i);
-                if (spId != null) {
-                    // Lấy giá chuẩn của gói dịch vụ cụ thể (BASIC/PRO/VIP) thế vào giá mua
-                    var servicePackageOpt = servicePackageRepository.findById(spId);
-                    if (servicePackageOpt.isPresent()) {
-                        priceAtPurchase = servicePackageOpt.get().getPrice();
-                    }
-                }
-            }
-
-            // Khử hoàn toàn lỗi NullPointerException đề phòng dữ liệu cha/con bị thiếu giá
-            if (priceAtPurchase == null) {
-                priceAtPurchase = BigDecimal.ZERO;
-            }
 
             OrderProductItem item = OrderProductItem.builder()
                     .order(order)
                     .productId(product.getId())
                     .productTitle(product.getTitle())
-                    .priceAtPurchase(priceAtPurchase)
+                    .priceAtPurchase(priceAtPurchase != null ? priceAtPurchase : BigDecimal.ZERO)
                     .quantity(1)
                     .build();
 
             order.addOrderItem(item);
-            total = total.add(priceAtPurchase);
+            total = total.add(item.getPriceAtPurchase());
         }
 
         order.setTotalPrice(total);
-        Order savedOrder = orderRepository.save(order);
-
-        return savedOrder.getId();
+        return orderRepository.save(order).getId();
     }
 
     @Transactional(readOnly = true)
@@ -156,5 +133,17 @@ public class OrderServiceImpl implements OrderService {
                         }).toList()
                 )
         ).toList();
+    }
+
+    @Override
+    public String getDownloadUrlForProduct(UUID userId, UUID orderItemId) {
+        OrderProductItem item = orderProductItemRepository.findById(orderItemId)
+                .orElseThrow(() -> new jakarta.persistence.EntityNotFoundException("Không tìm thấy mục đơn hàng"));
+
+        if (!item.getOrder().getCustomerId().equals(userId)) {
+            throw new SecurityException("Bạn không có quyền truy cập sản phẩm này.");
+        }
+        return orderProductItemRepository.findThumbnailUrlByProductId(item.getProductId())
+                .orElse("/default-thumbnail.png");
     }
 }
